@@ -11,11 +11,11 @@ import (
 )
 
 type shippingInfo struct {
-	Address            map[string]any   `json:"address"`
-	SelectedAddresses  []map[string]any `json:"selectedAddresses"`
-	SLAName            string
-	AddressID          string
-	NumItems           int
+	Address           map[string]any   `json:"address"`
+	SelectedAddresses []map[string]any `json:"selectedAddresses"`
+	SLAName           string
+	AddressID         string
+	NumItems          int
 }
 
 func (c *Client) getShippingInfo(orderFormID string) (*shippingInfo, error) {
@@ -36,7 +36,7 @@ func (c *Client) getShippingInfo(orderFormID string) (*shippingInfo, error) {
 			} `json:"logisticsInfo"`
 		} `json:"shippingData"`
 	}
-	json.Unmarshal(body, &resp)
+	_ = json.Unmarshal(body, &resp)
 
 	info := &shippingInfo{NumItems: len(resp.Items)}
 
@@ -90,9 +90,9 @@ func (c *Client) SetAddress(orderFormID string, numItems int) error {
 	}
 
 	payload := map[string]any{
-		"logisticsInfo":                     logisticsInfo,
-		"selectedAddresses":                 info.SelectedAddresses,
-		"clearAddressIfPostalCodeNotFound":  false,
+		"logisticsInfo":                    logisticsInfo,
+		"selectedAddresses":                info.SelectedAddresses,
+		"clearAddressIfPostalCodeNotFound": false,
 	}
 	path := fmt.Sprintf("/api/checkout/pub/orderForm/%s/attachments/shippingData", orderFormID)
 	_, err = c.PostJSON(path, payload)
@@ -135,9 +135,9 @@ func (c *Client) SetShippingWindow(orderFormID string, window DeliveryWindow, nu
 	}
 
 	payload := map[string]any{
-		"logisticsInfo":                     logisticsInfo,
-		"selectedAddresses":                 info.SelectedAddresses,
-		"clearAddressIfPostalCodeNotFound":  false,
+		"logisticsInfo":                    logisticsInfo,
+		"selectedAddresses":                info.SelectedAddresses,
+		"clearAddressIfPostalCodeNotFound": false,
 	}
 	path := fmt.Sprintf("/api/checkout/pub/orderForm/%s/attachments/shippingData", orderFormID)
 	_, err = c.PostJSON(path, payload)
@@ -148,12 +148,12 @@ func (c *Client) SetShippingWindow(orderFormID string, window DeliveryWindow, nu
 }
 
 type SavedCard struct {
-	AccountID         string `json:"accountId"`
-	CardNumber        string `json:"cardNumber"`
-	Bin               string `json:"bin"`
-	PaymentSystem     string `json:"paymentSystem"`
-	PaymentSystemName string `json:"paymentSystemName"`
-	AvailableAddresses []any `json:"availableAddresses"`
+	AccountID          string `json:"accountId"`
+	CardNumber         string `json:"cardNumber"`
+	Bin                string `json:"bin"`
+	PaymentSystem      string `json:"paymentSystem"`
+	PaymentSystemName  string `json:"paymentSystemName"`
+	AvailableAddresses []any  `json:"availableAddresses"`
 }
 
 func (c *Client) GetSavedCards(orderFormID string) ([]SavedCard, error) {
@@ -194,7 +194,7 @@ func (c *Client) SetPayment(orderFormID string, paymentSystemID int, value int) 
 func (c *Client) SetPaymentWithSavedCard(orderFormID string, card SavedCard, value int) error {
 	psID := 2
 	if card.PaymentSystem != "" {
-		fmt.Sscanf(card.PaymentSystem, "%d", &psID)
+		_, _ = fmt.Sscanf(card.PaymentSystem, "%d", &psID)
 	}
 
 	payload := map[string]any{
@@ -293,7 +293,7 @@ func (c *Client) PlaceOrder(orderFormID string, orderValue int) (*TransactionRes
 func (c *Client) PayWithSavedCard(tx *TransactionResult, card SavedCard, cvv string, orderValue int) error {
 	psID := 2
 	if card.PaymentSystem != "" {
-		fmt.Sscanf(card.PaymentSystem, "%d", &psID)
+		_, _ = fmt.Sscanf(card.PaymentSystem, "%d", &psID)
 	}
 
 	// tx.MerchantName is the full ID like "ZONASULZSA-zonasulzsa"
@@ -307,15 +307,15 @@ func (c *Client) PayWithSavedCard(tx *TransactionResult, card SavedCard, cvv str
 
 	payload := []map[string]any{
 		{
-			"paymentSystem":          psID,
-			"paymentSystemName":      card.PaymentSystemName,
-			"group":                  "creditCardPaymentGroup",
-			"installments":           1,
+			"paymentSystem":            psID,
+			"paymentSystemName":        card.PaymentSystemName,
+			"group":                    "creditCardPaymentGroup",
+			"installments":             1,
 			"installmentsInterestRate": 0,
-			"installmentsValue":      orderValue,
-			"value":                  orderValue,
-			"referenceValue":         orderValue,
-			"accountId":              card.AccountID,
+			"installmentsValue":        orderValue,
+			"value":                    orderValue,
+			"referenceValue":           orderValue,
+			"accountId":                card.AccountID,
 			"fields": map[string]string{
 				"validationCode": cvv,
 				"securityCode":   cvv,
@@ -375,7 +375,7 @@ func (c *Client) GatewayCallback(orderGroup string) error {
 			return fmt.Errorf("gateway callback: %w", err)
 		}
 		cbBody, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		if resp.StatusCode == 200 || resp.StatusCode == 204 {
 			return nil

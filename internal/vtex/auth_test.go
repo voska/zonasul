@@ -18,7 +18,7 @@ func TestAuthStart(t *testing.T) {
 		if scope != "zonasul" {
 			t.Errorf("expected scope=zonasul, got %s", scope)
 		}
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"authenticationToken":        "test-auth-token-123",
 			"showClassicAuthentication":   false,
 			"showAccessKeyAuthentication": false,

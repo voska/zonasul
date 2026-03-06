@@ -13,7 +13,7 @@ import (
 func TestSetAddress(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"items": []any{map[string]any{"id": "123"}},
 				"shippingData": map[string]any{
 					"selectedAddresses": []map[string]any{
@@ -35,7 +35,7 @@ func TestSetAddress(t *testing.T) {
 			return
 		}
 		var payload map[string]any
-		json.NewDecoder(r.Body).Decode(&payload)
+		_ = json.NewDecoder(r.Body).Decode(&payload)
 
 		if _, hasAddress := payload["address"]; hasAddress {
 			t.Error("payload should NOT have top-level 'address' field")
@@ -65,7 +65,7 @@ func TestSetAddress(t *testing.T) {
 			t.Error("SetAddress should NOT include deliveryWindow")
 		}
 
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer srv.Close()
 
@@ -79,7 +79,7 @@ func TestSetAddress(t *testing.T) {
 func TestSetShippingWindow(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"items": []any{map[string]any{"id": "123"}},
 				"shippingData": map[string]any{
 					"selectedAddresses": []map[string]any{
@@ -101,7 +101,7 @@ func TestSetShippingWindow(t *testing.T) {
 			return
 		}
 		var payload map[string]any
-		json.NewDecoder(r.Body).Decode(&payload)
+		_ = json.NewDecoder(r.Body).Decode(&payload)
 
 		if _, hasAddress := payload["address"]; hasAddress {
 			t.Error("payload should NOT have top-level 'address' field")
@@ -132,7 +132,7 @@ func TestSetShippingWindow(t *testing.T) {
 		if dw["tax"].(float64) != 0 {
 			t.Errorf("expected tax 0, got %v", dw["tax"])
 		}
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer srv.Close()
 
@@ -158,13 +158,13 @@ func TestSetPayment(t *testing.T) {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
 		var payload map[string]any
-		json.NewDecoder(r.Body).Decode(&payload)
+		_ = json.NewDecoder(r.Body).Decode(&payload)
 		payments := payload["payments"].([]any)
 		p := payments[0].(map[string]any)
 		if p["paymentSystem"].(float64) != 125 {
 			t.Errorf("expected payment system 125, got %v", p["paymentSystem"])
 		}
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer srv.Close()
 
@@ -181,7 +181,7 @@ func TestSetPaymentWithSavedCard(t *testing.T) {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
 		var payload map[string]any
-		json.NewDecoder(r.Body).Decode(&payload)
+		_ = json.NewDecoder(r.Body).Decode(&payload)
 		payments := payload["payments"].([]any)
 		p := payments[0].(map[string]any)
 		if p["paymentSystem"].(float64) != 2 {
@@ -202,7 +202,7 @@ func TestSetPaymentWithSavedCard(t *testing.T) {
 		if p["tokenId"] != nil {
 			t.Errorf("expected tokenId nil, got %v", p["tokenId"])
 		}
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer srv.Close()
 
@@ -234,7 +234,7 @@ func TestGetSavedCards(t *testing.T) {
 				},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -272,7 +272,7 @@ func TestPlaceOrder(t *testing.T) {
 				},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -307,8 +307,8 @@ func TestPayWithSavedCard(t *testing.T) {
 			capturedCookie = cookie.Value
 		}
 
-		json.NewDecoder(r.Body).Decode(&capturedPayload)
-		w.Write([]byte(`{}`))
+		_ = json.NewDecoder(r.Body).Decode(&capturedPayload)
+		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer gatewaySrv.Close()
 
@@ -393,7 +393,7 @@ func TestGatewayCallback(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedPath = r.URL.Path
 		capturedMethod = r.Method
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer srv.Close()
 

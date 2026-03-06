@@ -3,17 +3,17 @@ package errfmt
 import "fmt"
 
 const (
-	ExitOK         = 0
-	ExitError      = 1
-	ExitUsage      = 2
-	ExitEmpty      = 3
-	ExitAuth       = 4
-	ExitNotFound   = 5
-	ExitForbidden  = 6
-	ExitRateLimit  = 7
-	ExitRetryable  = 8
-	ExitMinOrder   = 9
-	ExitConfig     = 10
+	ExitOK        = 0
+	ExitError     = 1
+	ExitUsage     = 2
+	ExitEmpty     = 3
+	ExitAuth      = 4
+	ExitNotFound  = 5
+	ExitForbidden = 6
+	ExitRateLimit = 7
+	ExitRetryable = 8
+	ExitMinOrder  = 9
+	ExitConfig    = 10
 )
 
 type Error struct {

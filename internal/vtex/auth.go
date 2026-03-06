@@ -12,7 +12,7 @@ import (
 )
 
 type authStartResponse struct {
-	AuthenticationToken        string `json:"authenticationToken"`
+	AuthenticationToken         string `json:"authenticationToken"`
 	ShowClassicAuthentication   bool   `json:"showClassicAuthentication"`
 	ShowAccessKeyAuthentication bool   `json:"showAccessKeyAuthentication"`
 }
@@ -56,18 +56,18 @@ func (c *Client) OAuthLogin() (string, error) {
 		accountCookie := r.URL.Query().Get("accountAuthCookie")
 		if accountCookie != "" {
 			w.Header().Set("Content-Type", "text/html")
-			fmt.Fprint(w, "<html><body><h2>Login successful!</h2><p>You can close this tab.</p></body></html>")
+			_, _ = fmt.Fprint(w, "<html><body><h2>Login successful!</h2><p>You can close this tab.</p></body></html>")
 			tokenCh <- accountCookie
 			return
 		}
 		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprint(w, "<html><body><h2>Login failed</h2><p>No auth cookie received.</p></body></html>")
+		_, _ = fmt.Fprint(w, "<html><body><h2>Login failed</h2><p>No auth cookie received.</p></body></html>")
 		errCh <- fmt.Errorf("no accountAuthCookie in callback")
 	})
 
 	srv := &http.Server{Handler: mux}
-	go srv.Serve(listener)
-	defer srv.Shutdown(context.Background())
+	go func() { _ = srv.Serve(listener) }()
+	defer func() { _ = srv.Shutdown(context.Background()) }()
 
 	loginURL := c.OAuthLoginURL(startResp.AuthenticationToken)
 	fmt.Printf("Opening browser for login...\n")
@@ -102,8 +102,8 @@ func (c *Client) AuthenticatedUser() (string, error) {
 func openBrowser(url string) {
 	switch runtime.GOOS {
 	case "darwin":
-		exec.Command("open", url).Start()
+		_ = exec.Command("open", url).Start()
 	case "linux":
-		exec.Command("xdg-open", url).Start()
+		_ = exec.Command("xdg-open", url).Start()
 	}
 }

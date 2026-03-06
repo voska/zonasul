@@ -13,7 +13,7 @@ import (
 func TestAddToCart(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/api/checkout/pub/orderForm") {
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"orderFormId": "abc123",
 				"items":       []any{},
 				"totalizers":  []any{},
@@ -23,7 +23,7 @@ func TestAddToCart(t *testing.T) {
 
 		if r.Method == "POST" && strings.Contains(r.URL.Path, "/items") {
 			var payload map[string]any
-			json.NewDecoder(r.Body).Decode(&payload)
+			_ = json.NewDecoder(r.Body).Decode(&payload)
 			items := payload["orderItems"].([]any)
 			item := items[0].(map[string]any)
 			if item["id"] != "6180" {
@@ -50,7 +50,7 @@ func TestAddToCart(t *testing.T) {
 					{"id": "Items", "name": "Total dos Itens", "value": 879},
 				},
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 			return
 		}
 
@@ -95,7 +95,7 @@ func TestGetOrderForm(t *testing.T) {
 				{"id": "Items", "name": "Total dos Itens", "value": 1758},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -122,7 +122,7 @@ func TestUpdateItemQuantity(t *testing.T) {
 			"items":       []any{},
 			"totalizers":  []any{},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -141,7 +141,7 @@ func TestRemoveAllItems(t *testing.T) {
 		if r.URL.Path != "/api/checkout/pub/orderForm/abc123/items/removeAll" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer srv.Close()
 
