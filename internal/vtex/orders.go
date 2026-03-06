@@ -6,10 +6,10 @@ import (
 )
 
 type Order struct {
-	OrderID           string `json:"orderId"`
-	CreationDate      string `json:"creationDate"`
-	Status            string `json:"status"`
-	StatusDescription string `json:"statusDescription"`
+	OrderID           string  `json:"orderId"`
+	CreationDate      string  `json:"creationDate"`
+	Status            string  `json:"status"`
+	StatusDescription string  `json:"statusDescription"`
 	TotalValue        float64 `json:"totalValue"`
 	TotalItems        int     `json:"totalItems"`
 }

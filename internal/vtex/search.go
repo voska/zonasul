@@ -26,22 +26,22 @@ func (c *Client) Search(query string, limit int) ([]SearchResult, error) {
 	}
 
 	vars := map[string]any{
-		"hideUnavailableItems":  true,
-		"skusFilter":            "ALL",
-		"simulationBehavior":    "default",
-		"installmentCriteria":   "MAX_WITHOUT_INTEREST",
-		"productOriginVtex":     true,
-		"map":                   "ft",
-		"query":                 query,
-		"orderBy":               "OrderByScoreDESC",
-		"from":                  0,
-		"to":                    limit - 1,
-		"selectedFacets":        []map[string]string{{"key": "ft", "value": query}},
-		"fullText":              query,
-		"facetsBehavior":        "Static",
-		"categoryTreeBehavior":  "default",
-		"withFacets":            false,
-		"variant":               "null-null",
+		"hideUnavailableItems": true,
+		"skusFilter":           "ALL",
+		"simulationBehavior":   "default",
+		"installmentCriteria":  "MAX_WITHOUT_INTEREST",
+		"productOriginVtex":    true,
+		"map":                  "ft",
+		"query":                query,
+		"orderBy":              "OrderByScoreDESC",
+		"from":                 0,
+		"to":                   limit - 1,
+		"selectedFacets":       []map[string]string{{"key": "ft", "value": query}},
+		"fullText":             query,
+		"facetsBehavior":       "Static",
+		"categoryTreeBehavior": "default",
+		"withFacets":           false,
+		"variant":              "null-null",
 	}
 
 	varsJSON, _ := json.Marshal(vars)

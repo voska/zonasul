@@ -17,10 +17,10 @@ const (
 )
 
 type Client struct {
-	baseURL       string
-	authToken     string
-	httpClient    *http.Client
-	GatewayURL    string // Override for testing; empty = use production URL
+	baseURL    string
+	authToken  string
+	httpClient *http.Client
+	GatewayURL string // Override for testing; empty = use production URL
 }
 
 func NewClient(baseURL, authToken string) *Client {

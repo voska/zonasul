@@ -18,9 +18,9 @@ const keyringService = "zonasul-cli"
 const keyringUser = "vtex-jwt"
 
 type CLI struct {
-	JSON    bool `help:"Output JSON for agent consumption." env:"ZONASUL_JSON"`
-	Plain   bool `help:"Output plain text for piping." env:"ZONASUL_PLAIN"`
-	NoInput bool `help:"Disable interactive prompts." env:"ZONASUL_NO_INPUT"`
+	JSON    bool             `help:"Output JSON for agent consumption." env:"ZONASUL_JSON"`
+	Plain   bool             `help:"Output plain text for piping." env:"ZONASUL_PLAIN"`
+	NoInput bool             `help:"Disable interactive prompts." env:"ZONASUL_NO_INPUT"`
 	Version kong.VersionFlag `help:"Print version and exit."`
 
 	Auth     AuthCmd     `cmd:"" help:"Authentication commands."`

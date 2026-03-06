@@ -18,7 +18,7 @@ func TestClientGet(t *testing.T) {
 			t.Error("missing auth cookie")
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"ok":true}`))
+		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
 	defer srv.Close()
 
@@ -40,7 +40,7 @@ func TestClientPostJSON(t *testing.T) {
 		if r.Header.Get("Content-Type") != "application/json" {
 			t.Error("missing content-type")
 		}
-		w.Write([]byte(`{"created":true}`))
+		_, _ = w.Write([]byte(`{"created":true}`))
 	}))
 	defer srv.Close()
 

@@ -260,7 +260,7 @@ func TestPlaceOrder(t *testing.T) {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
 		resp := map[string]any{
-			"orderGroup": "v12345",
+			"orderGroup":  "v12345",
 			"receiverUri": "https://zonasul.vtexpayments.com.br/split/v12345/payments",
 			"merchantTransactions": []map[string]any{
 				{
