@@ -1,0 +1,65 @@
+# zonasul — Zona Sul Supermarket CLI
+
+> Agent-first CLI for ordering groceries from Zona Sul supermarket in Rio de Janeiro.
+
+zonasul is a free, open-source command-line interface for Zona Sul supermarket written in Go. It provides product search, cart management, delivery scheduling, and checkout from the terminal.
+
+## Install
+
+- Homebrew (macOS/Linux): `brew install voska/tap/zonasul`
+- Go: `go install github.com/voska/zonasul/cmd/zonasul@latest`
+- Binary: https://github.com/voska/zonasul/releases
+- AI Agent: `npx skills add -g voska/zonasul`
+
+## Output Modes
+
+- Default: colored output with hints on stderr
+- `--json`: structured JSON to stdout
+- `--plain`: plain text for piping
+
+## Commands
+
+- `zonasul auth login|status|logout` — JWT authentication via macOS Keychain
+- `zonasul search <query>` — Search products (use Portuguese)
+- `zonasul cart show|add|remove|clear` — Cart management
+- `zonasul delivery windows` — List delivery time slots
+- `zonasul checkout` — Place an order (--payment pix|credit|cash|vr|alelo|ticket, --confirm required)
+- `zonasul orders` — List recent orders
+- `zonasul agent exit-codes` — Exit code reference
+- `zonasul schema` — CLI command tree as JSON for agent introspection
+
+## Exit Codes
+
+- 0: success
+- 1: error
+- 2: usage (invalid arguments)
+- 3: empty (no results)
+- 4: auth_required
+- 5: not_found
+- 6: forbidden
+- 7: rate_limited
+- 8: retryable (transient error)
+- 9: min_order (cart below R$100)
+- 10: config_error
+
+## Agent Integration
+
+zonasul is designed agent-first:
+- Structured JSON output via --json
+- Machine-readable exit codes (0-10)
+- --no-input flag for non-interactive use
+- `zonasul schema` outputs full CLI structure as JSON
+- Install as Claude Code skill: `npx skills add -g voska/zonasul`
+
+## Key Flags
+
+- `--json`: structured JSON output
+- `--plain`: plain text output
+- `--no-input`: never prompt, fail if confirmation needed
+- `--confirm`: required safety gate for placing orders
+
+## Links
+
+- Source: https://github.com/voska/zonasul
+- Releases: https://github.com/voska/zonasul/releases
+- License: MIT

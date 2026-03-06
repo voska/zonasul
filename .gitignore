@@ -1,3 +1,5 @@
 /zonasul
+bin/
+dist/
 *.exe
 .DS_Store

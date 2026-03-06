@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mattvoska/zonasul/internal/config"
+	"github.com/voska/zonasul/internal/config"
 )
 
 func TestLoadSaveConfig(t *testing.T) {

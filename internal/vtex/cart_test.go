@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mattvoska/zonasul/internal/vtex"
+	"github.com/voska/zonasul/internal/vtex"
 )
 
 func TestAddToCart(t *testing.T) {

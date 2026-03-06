@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mattvoska/zonasul/internal/vtex"
+	"github.com/voska/zonasul/internal/vtex"
 )
 
 func TestSetAddress(t *testing.T) {

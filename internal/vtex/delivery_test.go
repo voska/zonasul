@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mattvoska/zonasul/internal/vtex"
+	"github.com/voska/zonasul/internal/vtex"
 )
 
 func TestGetDeliveryWindows(t *testing.T) {

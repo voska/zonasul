@@ -20,8 +20,8 @@ First-time setup: see [SETUP.md](SETUP.md). Debugging: see [TROUBLESHOOTING.md](
 Before anything, verify the CLI is built and auth is valid:
 
 ```bash
-go build -o zonasul ./cmd/zonasul
-./zonasul auth status --json
+make build
+bin/zonasul auth status --json
 ```
 
 If auth returns `"status":"expired"` or `"status":"unauthenticated"`, the user needs to re-authenticate — see [SETUP.md](SETUP.md).
@@ -147,5 +147,8 @@ Common Portuguese grocery terms:
 | 3 | No results / empty cart |
 | 4 | Auth required (token expired) |
 | 5 | Not found |
-| 6 | Below R$100 minimum |
+| 6 | Permission denied |
 | 7 | Rate limited |
+| 8 | Retryable (transient error) |
+| 9 | Below R$100 minimum |
+| 10 | Configuration error |

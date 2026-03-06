@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/mattvoska/zonasul/internal/outfmt"
+	"github.com/voska/zonasul/internal/outfmt"
 )
 
 func TestJSON(t *testing.T) {

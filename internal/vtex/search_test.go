@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mattvoska/zonasul/internal/vtex"
+	"github.com/voska/zonasul/internal/vtex"
 )
 
 func TestSearch(t *testing.T) {

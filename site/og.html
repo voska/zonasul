@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1200">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1200px;
+      height: 630px;
+      background: #09090b;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    .grain {
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+    }
+    .glow {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+      top: -100px;
+      right: -50px;
+      pointer-events: none;
+    }
+    .content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 90px;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 100px;
+      padding: 8px 18px;
+      margin-bottom: 32px;
+      width: fit-content;
+    }
+    .badge span {
+      color: #f59e0b;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: #f59e0b;
+      border-radius: 50%;
+    }
+    h1 {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 72px;
+      font-weight: 700;
+      color: #fafafa;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    h1 .amber {
+      color: #f59e0b;
+    }
+    p {
+      font-size: 24px;
+      color: #a1a1aa;
+      line-height: 1.5;
+      max-width: 600px;
+    }
+    .terminal {
+      position: absolute;
+      right: 80px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 420px;
+      z-index: 2;
+    }
+    .terminal-chrome {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      background: #18181b;
+      border-bottom: 1px solid #27272a;
+    }
+    .terminal-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #27272a;
+    }
+    .terminal-body {
+      padding: 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .prompt { color: #f59e0b; }
+    .cmd { color: #fafafa; }
+    .dim { color: #52525b; }
+    .result { color: #a1a1aa; }
+    .price { color: #22c55e; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="glow"></div>
+
+  <div class="content">
+    <div class="badge">
+      <div class="dot"></div>
+      <span>OPEN SOURCE CLI</span>
+    </div>
+    <h1>zona<span class="amber">sul</span></h1>
+    <p>Order groceries from Zona&nbsp;Sul supermarket in Rio&nbsp;de&nbsp;Janeiro, from your terminal.</p>
+  </div>
+
+  <div class="terminal">
+    <div class="terminal-chrome">
+      <div class="terminal-bar">
+        <div class="terminal-dot"></div>
+        <div class="terminal-dot"></div>
+        <div class="terminal-dot"></div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="prompt">$</span> <span class="cmd">zonasul search "leite"</span></div>
+        <div class="result">1&nbsp;&nbsp;&nbsp;Leite Integral Itambe 1L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="price">R$8.79</span></div>
+        <div class="result">2&nbsp;&nbsp;&nbsp;Leite Desnatado Parmalat&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="price">R$7.49</span></div>
+        <div class="result">3&nbsp;&nbsp;&nbsp;Leite Condensado Moca&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="price">R$9.29</span></div>
+        <div class="dim" style="margin-top: 12px;"><!-- spacer --></div>
+        <div><span class="prompt">$</span> <span class="cmd">zonasul cart add 12345 --qty 2</span></div>
+        <div class="result" style="color: #22c55e;">Added to cart.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

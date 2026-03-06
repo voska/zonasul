@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>zonasul — Zona Sul Supermarket CLI for AI Agents</title>
+  <meta name="description" content="zonasul is an open-source command-line interface for ordering groceries from Zona Sul supermarket in Rio de Janeiro. Search products, manage your cart, and place delivery orders from your terminal. Structured JSON output for AI agents.">
+  <meta name="keywords" content="Zona Sul CLI, grocery CLI, supermarket API, Rio de Janeiro groceries, AI agent tools, VTEX CLI, grocery delivery automation">
+  <link rel="alternate" hreflang="en" href="https://zonasulcli.com">
+  <link rel="alternate" hreflang="pt-BR" href="https://zonasulcli.com?lang=pt">
+  <link rel="canonical" href="https://zonasulcli.com">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#09090b">
+  <meta name="author" content="Matt Voska">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="zonasul — Zona Sul Supermarket CLI">
+  <meta property="og:description" content="Order groceries from Zona Sul in Rio de Janeiro from your terminal. Built for AI agents.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://zonasulcli.com">
+  <meta property="og:site_name" content="zonasul CLI">
+  <meta property="og:image" content="https://zonasulcli.com/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="zonasul CLI — order groceries from Zona Sul supermarket via terminal">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="pt_BR">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="zonasul — Zona Sul Supermarket CLI">
+  <meta name="twitter:description" content="Order groceries from Zona Sul in Rio de Janeiro from your terminal. Built for AI agents.">
+  <meta name="twitter:image" content="https://zonasulcli.com/og.png">
+  <meta name="twitter:creator" content="@mattvoska">
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%2309090b'/><text x='90' y='120' text-anchor='middle' font-family='monospace' font-size='60' font-weight='700' fill='%23f59e0b'>zs</text></svg>">
+
+  <!-- LLMs -->
+  <link rel="llms" href="/llms.txt" type="text/plain">
+
+  <!-- JSON-LD: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "zonasul",
+    "alternateName": "zonasul CLI",
+    "description": "An open-source command-line interface for ordering groceries from Zona Sul supermarket in Rio de Janeiro. Search products, manage your cart, schedule delivery, and place orders from the terminal. Outputs structured JSON for AI agents.",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "Command Line Tool",
+    "operatingSystem": "macOS, Linux, Windows",
+    "license": "https://opensource.org/licenses/MIT",
+    "url": "https://zonasulcli.com",
+    "downloadUrl": "https://github.com/voska/zonasul/releases",
+    "codeRepository": "https://github.com/voska/zonasul",
+    "programmingLanguage": "Go",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "softwareVersion": "0.1.0",
+    "datePublished": "2026-03-06",
+    "author": {
+      "@type": "Person",
+      "name": "Matt Voska",
+      "url": "https://github.com/voska"
+    },
+    "featureList": [
+      "Three output modes: JSON, human-readable, plain text",
+      "JWT authentication with macOS Keychain storage",
+      "AI agent mode with structured exit codes and JSON schema introspection",
+      "Product search in Portuguese with pricing and availability",
+      "Cart management with add, remove, and clear operations",
+      "Scheduled delivery with time window selection",
+      "Credit card and Pix payment support",
+      "Recipe-based ordering workflow for AI agents"
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is zonasul CLI?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "zonasul is a free, open-source command-line interface for ordering groceries from Zona Sul supermarket in Rio de Janeiro, Brazil. It lets you search products, manage a shopping cart, schedule delivery, and place orders from your terminal. It outputs structured JSON for AI agents, colored text for humans, and plain text for shell pipelines."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I install zonasul CLI?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "On macOS or Linux, install via Homebrew: brew install voska/tap/zonasul. You can also install with Go: go install github.com/voska/zonasul/cmd/zonasul@latest, or download binaries from GitHub Releases."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use zonasul with AI agents like Claude Code?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. zonasul is designed for AI agents. It provides structured JSON output via --json, machine-readable exit codes (0-10), a --no-input flag for non-interactive use, and a schema command that outputs the full CLI structure as JSON. Install as a Claude Code skill with: npx skills add -g voska/zonasul."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Zona Sul deliver to my neighborhood?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Zona Sul delivers to select neighborhoods in Rio de Janeiro including Leblon, Ipanema, Copacabana, Botafogo, Laranjeiras, Flamengo, and surrounding areas. You need a Zona Sul account with a registered delivery address."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['ui-monospace', 'SFMono-Regular', 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#fffbeb',
+              100: '#fef3c7',
+              200: '#fde68a',
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+              800: '#92400e',
+              900: '#78350f',
+              950: '#451a03',
+            },
+            surface: {
+              bg:     '#09090b',
+              card:   '#111114',
+              raised: '#18181b',
+              border: '#27272a',
+              hover:  '#2e2e33',
+            },
+            muted: '#a1a1aa',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #09090b;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .hero-gradient {
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.15), transparent);
+    }
+    .terminal {
+      background: #111114;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .terminal-bar {
+      background: #18181b;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #27272a;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .syn-prompt { color: #f59e0b; }
+    .syn-cmd { color: #e4e4e7; }
+    .syn-flag { color: #a78bfa; }
+    .syn-str { color: #67e8f9; }
+    .syn-num { color: #fbbf24; }
+    .syn-dim { color: #71717a; }
+    .syn-key { color: #fb923c; }
+    .tab-btn.active {
+      background: #27272a;
+      color: #e4e4e7;
+    }
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    [data-reveal].revealed {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    [data-reveal-delay="1"].revealed { transition-delay: 0.1s; }
+    [data-reveal-delay="2"].revealed { transition-delay: 0.2s; }
+    [data-reveal-delay="3"].revealed { transition-delay: 0.3s; }
+    [data-reveal-delay="4"].revealed { transition-delay: 0.4s; }
+    .card-glow {
+      position: relative;
+      transition: border-color 0.3s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-glow:hover {
+      border-color: rgba(245, 158, 11, 0.3);
+      transform: translateY(-2px);
+    }
+    .card-glow::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.06), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .card-glow:hover::before { opacity: 1; }
+    .copy-btn { transition: opacity 0.15s, color 0.15s; }
+    .copy-btn:hover { opacity: 1 !important; color: #e4e4e7; }
+    .nav-blur {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(9, 9, 11, 0.8);
+    }
+    .version-pill {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  </style>
+</head>
+<body class="text-zinc-200 antialiased">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 inset-x-0 z-50 nav-blur border-b border-surface-border">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <a href="#" class="text-lg font-bold font-mono tracking-tight">zonasul</a>
+      <div class="flex items-center gap-5 text-sm">
+        <a href="#features" class="text-muted hover:text-zinc-200 transition-colors hidden sm:block" data-i18n="nav.features">Features</a>
+        <a href="#install" class="text-muted hover:text-zinc-200 transition-colors hidden sm:block" data-i18n="nav.install">Install</a>
+        <a href="#quickstart" class="text-muted hover:text-zinc-200 transition-colors hidden sm:block" data-i18n="nav.quickstart">Quick Start</a>
+        <a href="#faq" class="text-muted hover:text-zinc-200 transition-colors hidden sm:block">FAQ</a>
+        <button onclick="toggleLang()" class="text-muted hover:text-zinc-200 transition-colors text-xs font-mono border border-surface-border rounded px-2 py-1 hover:border-zinc-600" id="lang-toggle" title="Switch language">EN</button>
+        <a href="https://github.com/voska/zonasul" class="text-muted hover:text-zinc-200 transition-colors flex items-center gap-1.5">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+          <span class="hidden sm:inline">GitHub</span>
+        </a>
+        <span class="version-pill px-2.5 py-0.5 rounded-full text-xs font-mono text-brand-400">v0.1.0</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero-gradient pt-28 pb-20 sm:pt-36 sm:pb-28">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+      <div data-reveal>
+        <p class="text-brand-400 font-mono text-sm font-medium tracking-wide uppercase mb-4" data-i18n="hero.badge">Open Source CLI</p>
+      </div>
+      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6" data-reveal data-reveal-delay="1">
+        <span class="gradient-text" data-i18n="hero.title1">Zona Sul groceries</span><br>
+        <span class="text-zinc-100" data-i18n="hero.title2">from your terminal</span>
+      </h1>
+      <p class="text-lg sm:text-xl text-muted max-w-2xl mx-auto mb-10 leading-relaxed" data-reveal data-reveal-delay="2" data-i18n="hero.subtitle">
+        Search products, build a cart, schedule delivery, and place orders. Structured output for AI agents, colored text for humans.
+      </p>
+
+      <!-- Hero agent copy-paste -->
+      <div class="max-w-2xl mx-auto mb-8" data-reveal data-reveal-delay="3">
+        <div class="terminal text-left mb-5">
+          <div class="px-5 py-4">
+            <pre class="font-mono text-sm whitespace-pre-wrap leading-relaxed"><span class="syn-cmd">Install the zonasul CLI skill for grocery ordering in Rio de Janeiro.</span>
+<span class="syn-dim">Run:</span> <span class="syn-str">npx skills add -g voska/zonasul</span></pre>
+          </div>
+        </div>
+        <button onclick="copyHeroPrompt(this)" class="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white rounded-lg text-base font-semibold transition-all shadow-lg shadow-brand-600/20 hover:shadow-brand-500/30" id="hero-copy-btn">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+          <span data-i18n="hero.copy">Copy Instructions</span>
+        </button>
+        <p class="text-xs text-muted text-center mt-3" data-i18n="hero.copyHint">Copy and paste into Claude Code or any AI agent</p>
+      </div>
+
+      <div class="flex items-center justify-center gap-4" data-reveal data-reveal-delay="4">
+        <a href="https://github.com/voska/zonasul" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-muted hover:text-zinc-200 transition-colors">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+          <span data-i18n="hero.github">View on GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Terminal Demo -->
+  <section class="max-w-6xl mx-auto px-6 pb-24" aria-label="Terminal demo">
+    <div class="terminal" data-reveal>
+      <div class="terminal-bar">
+        <div class="terminal-dot" style="background:#f85149;"></div>
+        <div class="terminal-dot" style="background:#fbbf24;"></div>
+        <div class="terminal-dot" style="background:#10b981;"></div>
+        <span class="text-xs text-muted ml-2 font-mono">zsh</span>
+      </div>
+      <div class="p-6 font-mono text-sm leading-relaxed overflow-x-auto space-y-6">
+        <!-- Search -->
+        <div>
+          <div><span class="syn-prompt">$</span> <span class="syn-cmd">zonasul search</span> <span class="syn-str">"banana"</span> <span class="syn-flag">--limit</span> <span class="syn-num">3</span></div>
+          <div class="mt-2 text-xs sm:text-sm">
+            <div><span class="syn-dim">1    Banana Prata                                       SKU:33277   R$8.79</span></div>
+            <div><span class="syn-dim">2    Banana Prata Organica 800g                         SKU:6180    R$10.99</span></div>
+            <div><span class="syn-dim">3    Banana Nanica                                      SKU:33278   R$5.49</span></div>
+          </div>
+        </div>
+
+        <!-- Cart add -->
+        <div>
+          <div><span class="syn-prompt">$</span> <span class="syn-cmd">zonasul cart add</span> <span class="syn-num">33277</span> <span class="syn-flag">--qty</span> <span class="syn-num">3</span></div>
+          <div class="mt-2">
+            <div><span class="text-brand-400">Added 33277 to cart.</span></div>
+          </div>
+        </div>
+
+        <!-- Delivery windows JSON -->
+        <div>
+          <div><span class="syn-prompt">$</span> <span class="syn-cmd">zonasul delivery windows</span> <span class="syn-flag">--json</span> <span class="syn-dim">| jq '.[0]'</span></div>
+          <div class="mt-2">
+            <div><span class="syn-dim">{</span></div>
+            <div>&nbsp;&nbsp;<span class="syn-key">"start"</span><span class="syn-dim">:</span> <span class="syn-str">"2026-03-06T14:01:00Z"</span><span class="syn-dim">,</span></div>
+            <div>&nbsp;&nbsp;<span class="syn-key">"end"</span><span class="syn-dim">:</span> <span class="syn-str">"2026-03-06T16:00:59Z"</span><span class="syn-dim">,</span></div>
+            <div>&nbsp;&nbsp;<span class="syn-key">"price"</span><span class="syn-dim">:</span> <span class="syn-num">700</span></div>
+            <div><span class="syn-dim">}</span></div>
+          </div>
+        </div>
+
+        <!-- Checkout -->
+        <div>
+          <div><span class="syn-prompt">$</span> <span class="syn-cmd">zonasul checkout</span> <span class="syn-flag">--window</span> <span class="syn-num">0</span> <span class="syn-flag">--cvv</span> <span class="syn-num">123</span> <span class="syn-flag">--confirm</span></div>
+          <div class="mt-2">
+            <div><span class="text-brand-400">Order placed! ID: v-1234567890</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="max-w-6xl mx-auto px-6 pb-24" aria-label="Features">
+    <h2 class="text-3xl font-bold text-center mb-4" data-reveal data-i18n="features.title">Built for agents and humans</h2>
+    <p class="text-muted text-center mb-12 max-w-xl mx-auto" data-reveal data-reveal-delay="1" data-i18n="features.subtitle">Three output modes, structured exit codes, and a full grocery workflow. From search to doorstep.</p>
+
+    <div class="grid md:grid-cols-3 gap-5">
+      <article class="terminal card-glow p-6" data-reveal>
+        <div class="w-10 h-10 rounded-lg bg-brand-950 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <h3 class="font-semibold text-lg mb-2">JSON / Human / Plain</h3>
+        <p class="text-muted text-sm leading-relaxed" data-i18n-html="features.output"><code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--json</code> for agents, colored output for humans, <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--plain</code> for pipelines. Stderr for hints, stdout for data.</p>
+      </article>
+
+      <article class="terminal card-glow p-6" data-reveal data-reveal-delay="1">
+        <div class="w-10 h-10 rounded-lg bg-brand-950 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4c0 2 2 3 2 6H8l4 6 4-6h-2c0-3 2-4 2-6a4 4 0 0 0-4-4Z"/><path d="M12 18v4"/></svg>
+        </div>
+        <h3 class="font-semibold text-lg mb-2" data-i18n="features.agentTitle">Agent-First</h3>
+        <p class="text-muted text-sm leading-relaxed" data-i18n-html="features.agent">Structured exit codes, <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--no-input</code> mode, and <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">zonasul schema</code> for JSON introspection. Built for Claude Code.</p>
+      </article>
+
+      <article class="terminal card-glow p-6" data-reveal data-reveal-delay="2">
+        <div class="w-10 h-10 rounded-lg bg-brand-950 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        </div>
+        <h3 class="font-semibold text-lg mb-2" data-i18n="features.groceryTitle">Full Grocery Workflow</h3>
+        <p class="text-muted text-sm leading-relaxed" data-i18n="features.grocery">Search products, manage your cart, pick a delivery window, and checkout. Handles address, payment, and order placement.</p>
+      </article>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-5 mt-5">
+      <article class="terminal card-glow p-6" data-reveal>
+        <div class="w-10 h-10 rounded-lg bg-brand-950 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3 class="font-semibold text-lg mb-2" data-i18n="features.authTitle">Secure Auth</h3>
+        <p class="text-muted text-sm leading-relaxed" data-i18n="features.auth">JWT tokens stored in macOS Keychain. CVV passed via flag or environment variable, never stored on disk.</p>
+      </article>
+
+      <article class="terminal card-glow p-6" data-reveal data-reveal-delay="1">
+        <div class="w-10 h-10 rounded-lg bg-brand-950 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+        </div>
+        <h3 class="font-semibold text-lg mb-2" data-i18n="features.recipeTitle">Recipe Mode</h3>
+        <p class="text-muted text-sm leading-relaxed" data-i18n="features.recipe">Give an AI agent a recipe and it searches, prices, and orders all the ingredients. Includes Portuguese grocery term translations.</p>
+      </article>
+
+      <article class="terminal card-glow p-6" data-reveal data-reveal-delay="2">
+        <div class="w-10 h-10 rounded-lg bg-brand-950 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3 class="font-semibold text-lg mb-2" data-i18n="features.crossTitle">Cross-Platform</h3>
+        <p class="text-muted text-sm leading-relaxed" data-i18n-html="features.cross">Pure Go binary. Install via Homebrew, <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">go install</code>, or download from GitHub Releases. No dependencies.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section id="install" class="max-w-6xl mx-auto px-6 pb-24" aria-label="Installation">
+    <h2 class="text-3xl font-bold text-center mb-4" data-reveal data-i18n="install.title">Install</h2>
+    <p class="text-muted text-center mb-10" data-reveal data-reveal-delay="1" data-i18n="install.subtitle">One command. No dependencies.</p>
+
+    <div class="terminal max-w-3xl mx-auto" data-reveal data-reveal-delay="2">
+      <div class="flex border-b border-surface-border overflow-x-auto" role="tablist" aria-label="Installation methods">
+        <button onclick="switchTab('homebrew')" class="tab-btn active px-5 py-3 text-sm font-mono text-muted hover:text-zinc-200 transition-colors flex-shrink-0" data-tab="homebrew" role="tab" aria-selected="true">Homebrew</button>
+        <button onclick="switchTab('go')" class="tab-btn px-5 py-3 text-sm font-mono text-muted hover:text-zinc-200 transition-colors flex-shrink-0" data-tab="go" role="tab" aria-selected="false">Go</button>
+        <button onclick="switchTab('binary')" class="tab-btn px-5 py-3 text-sm font-mono text-muted hover:text-zinc-200 transition-colors flex-shrink-0" data-tab="binary" role="tab" aria-selected="false">Binary</button>
+      </div>
+
+      <div class="p-6">
+        <div id="tab-homebrew" class="tab-content" role="tabpanel">
+          <div class="flex items-start justify-between gap-4">
+            <pre class="font-mono text-sm"><span class="syn-prompt">$</span> <span class="syn-cmd">brew install voska/tap/zonasul</span></pre>
+            <button onclick="copyText('brew install voska/tap/zonasul', this)" class="copy-btn opacity-40 text-muted flex-shrink-0" title="Copy" aria-label="Copy Homebrew install command">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+            </button>
+          </div>
+          <p class="text-muted text-xs mt-3">macOS and Linux</p>
+        </div>
+
+        <div id="tab-go" class="tab-content hidden" role="tabpanel">
+          <div class="flex items-start justify-between gap-4">
+            <pre class="font-mono text-sm"><span class="syn-prompt">$</span> <span class="syn-cmd">go install github.com/voska/zonasul/cmd/zonasul@latest</span></pre>
+            <button onclick="copyText('go install github.com/voska/zonasul/cmd/zonasul@latest', this)" class="copy-btn opacity-40 text-muted flex-shrink-0" title="Copy" aria-label="Copy Go install command">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+            </button>
+          </div>
+          <p class="text-muted text-xs mt-3">Requires Go 1.25+</p>
+        </div>
+
+        <div id="tab-binary" class="tab-content hidden" role="tabpanel">
+          <p class="text-sm mb-3">Download the latest binary from <a href="https://github.com/voska/zonasul/releases" class="text-brand-400 hover:underline">GitHub Releases</a>.</p>
+          <pre class="font-mono text-sm"><span class="syn-prompt">$</span> <span class="syn-cmd">tar xzf zonasul_darwin_arm64.tar.gz</span>
+<span class="syn-prompt">$</span> <span class="syn-cmd">mv zonasul /usr/local/bin/</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section id="quickstart" class="max-w-6xl mx-auto px-6 pb-24" aria-label="Quick start guide">
+    <h2 class="text-3xl font-bold text-center mb-4" data-reveal data-i18n="quickstart.title">Quick Start</h2>
+    <p class="text-muted text-center mb-10" data-reveal data-reveal-delay="1" data-i18n="quickstart.subtitle">From install to groceries at your door.</p>
+
+    <div class="max-w-3xl mx-auto space-y-4">
+      <div class="terminal card-glow" data-reveal>
+        <div class="flex items-center gap-3 px-6 pt-5 pb-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-600 text-white text-xs font-bold flex-shrink-0">1</span>
+          <span class="text-sm font-medium" data-i18n="quickstart.step1">Authenticate with Zona Sul</span>
+        </div>
+        <div class="px-6 pb-5">
+          <pre class="font-mono text-sm mt-2"><span class="syn-prompt">$</span> <span class="syn-cmd">zonasul auth login</span>
+<span class="syn-dim">Paste JWT token:</span> <span class="syn-dim">eyJhbGciOi...</span>
+<span class="text-brand-400">Logged in as: maria@example.com</span></pre>
+        </div>
+      </div>
+
+      <div class="terminal card-glow" data-reveal data-reveal-delay="1">
+        <div class="flex items-center gap-3 px-6 pt-5 pb-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-600 text-white text-xs font-bold flex-shrink-0">2</span>
+          <span class="text-sm font-medium" data-i18n="quickstart.step2">Search and add products</span>
+        </div>
+        <div class="px-6 pb-5">
+          <pre class="font-mono text-sm mt-2"><span class="syn-prompt">$</span> <span class="syn-cmd">zonasul search</span> <span class="syn-str">"arroz"</span> <span class="syn-flag">--limit</span> <span class="syn-num">3</span>
+<span class="syn-dim">1    Arroz Camil Tipo 1 5kg                            SKU:11234   R$29.90
+2    Arroz Integral Tio Joao 1kg                       SKU:11240   R$8.49
+3    Arroz Arborio Riso Gallo 500g                     SKU:11251   R$15.90</span>
+
+<span class="syn-prompt">$</span> <span class="syn-cmd">zonasul cart add</span> <span class="syn-num">11234</span></pre>
+        </div>
+      </div>
+
+      <div class="terminal card-glow" data-reveal data-reveal-delay="2">
+        <div class="flex items-center gap-3 px-6 pt-5 pb-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-600 text-white text-xs font-bold flex-shrink-0">3</span>
+          <span class="text-sm font-medium" data-i18n="quickstart.step3">Pick a delivery window</span>
+        </div>
+        <div class="px-6 pb-5">
+          <pre class="font-mono text-sm mt-2"><span class="syn-prompt">$</span> <span class="syn-cmd">zonasul delivery windows</span>
+<span class="syn-dim">0    Thu 06 Mar 14:01 — 16:00  R$7.00
+1    Thu 06 Mar 16:01 — 21:00  Gratis
+2    Fri 07 Mar 08:01 — 13:00  Gratis</span></pre>
+        </div>
+      </div>
+
+      <div class="terminal card-glow" data-reveal data-reveal-delay="3">
+        <div class="flex items-center gap-3 px-6 pt-5 pb-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-600 text-white text-xs font-bold flex-shrink-0">4</span>
+          <span class="text-sm font-medium" data-i18n="quickstart.step4">Place the order</span>
+        </div>
+        <div class="px-6 pb-5">
+          <pre class="font-mono text-sm mt-2"><span class="syn-prompt">$</span> <span class="syn-cmd">zonasul checkout</span> <span class="syn-flag">--window</span> <span class="syn-num">1</span> <span class="syn-flag">--cvv</span> <span class="syn-num">123</span> <span class="syn-flag">--confirm</span>
+<span class="text-brand-400">Order placed! ID: v-1234567890</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="max-w-6xl mx-auto px-6 pb-24" aria-label="Frequently asked questions">
+    <h2 class="text-3xl font-bold text-center mb-10" data-reveal data-i18n="faq.title">FAQ</h2>
+
+    <div class="max-w-3xl mx-auto space-y-6">
+      <details class="terminal group" data-reveal>
+        <summary class="px-6 py-4 cursor-pointer flex items-center justify-between hover:bg-surface-raised transition-colors rounded-xl">
+          <span class="font-medium" data-i18n="faq.q1">What is zonasul CLI?</span>
+          <svg class="w-5 h-5 text-muted transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="px-6 pb-5 text-muted text-sm leading-relaxed" data-i18n="faq.a1">
+          zonasul is a free, open-source command-line interface for ordering groceries from Zona Sul supermarket in Rio de Janeiro, Brazil. It lets you search products, manage a shopping cart, schedule delivery, and place orders from your terminal. It outputs structured JSON for AI agents, colored text for humans, and plain text for shell pipelines. Written in Go with zero runtime dependencies.
+        </div>
+      </details>
+
+      <details class="terminal group" data-reveal data-reveal-delay="1">
+        <summary class="px-6 py-4 cursor-pointer flex items-center justify-between hover:bg-surface-raised transition-colors rounded-xl">
+          <span class="font-medium" data-i18n="faq.q2">How do I install zonasul?</span>
+          <svg class="w-5 h-5 text-muted transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="px-6 pb-5 text-muted text-sm leading-relaxed" data-i18n-html="faq.a2">
+          On macOS or Linux: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">brew install voska/tap/zonasul</code>. With Go: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">go install github.com/voska/zonasul/cmd/zonasul@latest</code>. Or download binaries directly from <a href="https://github.com/voska/zonasul/releases" class="text-brand-400 hover:underline">GitHub Releases</a>.
+        </div>
+      </details>
+
+      <details class="terminal group" data-reveal data-reveal-delay="2">
+        <summary class="px-6 py-4 cursor-pointer flex items-center justify-between hover:bg-surface-raised transition-colors rounded-xl">
+          <span class="font-medium" data-i18n="faq.q3">Can I use zonasul with AI agents?</span>
+          <svg class="w-5 h-5 text-muted transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="px-6 pb-5 text-muted text-sm leading-relaxed" data-i18n-html="faq.a3">
+          Yes. zonasul is designed agent-first. It provides structured JSON output via <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--json</code>, machine-readable exit codes (0-10), a <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--no-input</code> flag for non-interactive use, and a <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">zonasul schema</code> command for introspection. Install as a Claude Code skill with: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">npx skills add -g voska/zonasul</code>. Give it a recipe and it will search, price, and order all ingredients.
+        </div>
+      </details>
+
+      <details class="terminal group" data-reveal data-reveal-delay="3">
+        <summary class="px-6 py-4 cursor-pointer flex items-center justify-between hover:bg-surface-raised transition-colors rounded-xl">
+          <span class="font-medium" data-i18n="faq.q4">Does Zona Sul deliver to my neighborhood?</span>
+          <svg class="w-5 h-5 text-muted transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="px-6 pb-5 text-muted text-sm leading-relaxed" data-i18n-html="faq.a4">
+          Zona Sul delivers to select neighborhoods in Rio de Janeiro including Leblon, Ipanema, Copacabana, Botafogo, Laranjeiras, Flamengo, and surrounding areas. You need a Zona Sul account at <a href="https://www.zonasul.com.br" class="text-brand-400 hover:underline">zonasul.com.br</a> with a registered delivery address.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-surface-border">
+    <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
+      <div class="flex items-center gap-2">
+        <span class="font-mono font-bold text-zinc-300">zonasul</span>
+        <span>&middot;</span>
+        <span>MIT License</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/voska/zonasul" class="hover:text-zinc-200 transition-colors">GitHub</a>
+        <a href="https://x.com/mattvoska" class="hover:text-zinc-200 transition-colors">@mattvoska</a>
+        <a href="/llms.txt" class="hover:text-zinc-200 transition-colors font-mono text-xs">llms.txt</a>
+      </div>
+    </div>
+    <div class="max-w-6xl mx-auto px-6 pb-8 text-xs text-zinc-500 text-center" data-i18n="footer.disclaimer">
+      zonasul is an independent open-source project. Not affiliated with, endorsed by, or sponsored by Zona Sul Supermercados or VTEX.
+    </div>
+  </footer>
+
+  <!-- Motion via CDN -->
+  <script type="module">
+    import { animate, inView, stagger } from 'https://cdn.jsdelivr.net/npm/motion@11/+esm';
+
+    document.querySelectorAll('[data-reveal]').forEach(el => {
+      inView(el, () => {
+        el.classList.add('revealed');
+      }, { margin: '-60px' });
+    });
+
+    const heroElements = document.querySelectorAll('.hero-gradient [data-reveal]');
+    heroElements.forEach(el => el.classList.add('revealed'));
+
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      const scrolled = window.scrollY > 20;
+      nav.style.borderBottomColor = scrolled ? 'rgba(39,39,42,1)' : 'rgba(39,39,42,0.5)';
+    }, { passive: true });
+
+    const terminalDemo = document.querySelector('[aria-label="Terminal demo"] .terminal');
+    if (terminalDemo) {
+      inView(terminalDemo, () => {
+        const lines = terminalDemo.querySelectorAll('.space-y-6 > div');
+        lines.forEach((line, i) => {
+          animate(line, { opacity: [0, 1], y: [10, 0] }, {
+            delay: i * 0.15,
+            duration: 0.5,
+            easing: [0.16, 1, 0.3, 1]
+          });
+        });
+      }, { margin: '-40px' });
+    }
+
+    const featureGrids = document.querySelectorAll('#features .grid');
+    featureGrids.forEach(grid => {
+      inView(grid, () => {
+        const cards = grid.querySelectorAll('article');
+        animate(cards, { opacity: [0, 1], y: [20, 0] }, {
+          delay: stagger(0.1),
+          duration: 0.5,
+          easing: [0.16, 1, 0.3, 1]
+        });
+      }, { margin: '-40px' });
+    });
+  </script>
+
+  <!-- i18n -->
+  <script>
+    const i18n = {
+      en: {
+        'nav.features': 'Features',
+        'nav.install': 'Install',
+        'nav.quickstart': 'Quick Start',
+        'hero.badge': 'Open Source CLI',
+        'hero.title1': 'Zona Sul groceries',
+        'hero.title2': 'from your terminal',
+        'hero.subtitle': 'Search products, build a cart, schedule delivery, and place orders. Structured output for AI agents, colored text for humans.',
+        'hero.copy': 'Copy Instructions',
+        'hero.copyHint': 'Copy and paste into Claude Code or any AI agent',
+        'hero.github': 'View on GitHub',
+        'features.title': 'Built for agents and humans',
+        'features.subtitle': 'Three output modes, structured exit codes, and a full grocery workflow. From search to doorstep.',
+        'features.output': '<code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--json</code> for agents, colored output for humans, <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--plain</code> for pipelines. Stderr for hints, stdout for data.',
+        'features.agentTitle': 'Agent-First',
+        'features.agent': 'Structured exit codes, <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--no-input</code> mode, and <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">zonasul schema</code> for JSON introspection. Built for Claude Code.',
+        'features.groceryTitle': 'Full Grocery Workflow',
+        'features.grocery': 'Search products, manage your cart, pick a delivery window, and checkout. Handles address, payment, and order placement.',
+        'features.authTitle': 'Secure Auth',
+        'features.auth': 'JWT tokens stored in macOS Keychain. CVV passed via flag or environment variable, never stored on disk.',
+        'features.recipeTitle': 'Recipe Mode',
+        'features.recipe': 'Give an AI agent a recipe and it searches, prices, and orders all the ingredients. Includes Portuguese grocery term translations.',
+        'features.crossTitle': 'Cross-Platform',
+        'features.cross': 'Pure Go binary. Install via Homebrew, <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">go install</code>, or download from GitHub Releases. No dependencies.',
+        'install.title': 'Install',
+        'install.subtitle': 'One command. No dependencies.',
+        'quickstart.title': 'Quick Start',
+        'quickstart.subtitle': 'From install to groceries at your door.',
+        'quickstart.step1': 'Authenticate with Zona Sul',
+        'quickstart.step2': 'Search and add products',
+        'quickstart.step3': 'Pick a delivery window',
+        'quickstart.step4': 'Place the order',
+        'faq.title': 'FAQ',
+        'faq.q1': 'What is zonasul CLI?',
+        'faq.a1': 'zonasul is a free, open-source command-line interface for ordering groceries from Zona Sul supermarket in Rio de Janeiro, Brazil. It lets you search products, manage a shopping cart, schedule delivery, and place orders from your terminal. It outputs structured JSON for AI agents, colored text for humans, and plain text for shell pipelines. Written in Go with zero runtime dependencies.',
+        'faq.q2': 'How do I install zonasul?',
+        'faq.a2': 'On macOS or Linux: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">brew install voska/tap/zonasul</code>. With Go: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">go install github.com/voska/zonasul/cmd/zonasul@latest</code>. Or download binaries directly from <a href="https://github.com/voska/zonasul/releases" class="text-brand-400 hover:underline">GitHub Releases</a>.',
+        'faq.q3': 'Can I use zonasul with AI agents?',
+        'faq.a3': 'Yes. zonasul is designed agent-first. It provides structured JSON output via <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--json</code>, machine-readable exit codes (0-10), a <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--no-input</code> flag for non-interactive use, and a <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">zonasul schema</code> command for introspection. Install as a Claude Code skill with: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">npx skills add -g voska/zonasul</code>. Give it a recipe and it will search, price, and order all ingredients.',
+        'faq.q4': 'Does Zona Sul deliver to my neighborhood?',
+        'faq.a4': 'Zona Sul delivers to select neighborhoods in Rio de Janeiro including Leblon, Ipanema, Copacabana, Botafogo, Laranjeiras, Flamengo, and surrounding areas. You need a Zona Sul account at <a href="https://www.zonasul.com.br" class="text-brand-400 hover:underline">zonasul.com.br</a> with a registered delivery address.',
+        'footer.disclaimer': 'zonasul is an independent open-source project. Not affiliated with, endorsed by, or sponsored by Zona Sul Supermercados or VTEX.',
+      },
+      pt: {
+        'nav.features': 'Recursos',
+        'nav.install': 'Instalar',
+        'nav.quickstart': 'Inicio Rapido',
+        'hero.badge': 'CLI Open Source',
+        'hero.title1': 'Compras no Zona Sul',
+        'hero.title2': 'pelo terminal',
+        'hero.subtitle': 'Busque produtos, monte seu carrinho, agende a entrega e faca pedidos. Saida estruturada para agentes de IA, texto colorido para humanos.',
+        'hero.copy': 'Copiar Instrucoes',
+        'hero.copyHint': 'Copie e cole no Claude Code ou qualquer agente de IA',
+        'hero.github': 'Ver no GitHub',
+        'features.title': 'Feito para agentes e humanos',
+        'features.subtitle': 'Tres modos de saida, codigos de saida estruturados e um fluxo completo de compras. Da busca ate a porta de casa.',
+        'features.output': '<code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--json</code> para agentes, saida colorida para humanos, <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--plain</code> para pipelines. Stderr para dicas, stdout para dados.',
+        'features.agentTitle': 'Agent-First',
+        'features.agent': 'Codigos de saida estruturados, modo <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--no-input</code> e <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">zonasul schema</code> para introspeccao JSON. Feito para o Claude Code.',
+        'features.groceryTitle': 'Fluxo Completo de Compras',
+        'features.grocery': 'Busque produtos, gerencie seu carrinho, escolha uma janela de entrega e finalize a compra. Cuida de endereco, pagamento e pedido.',
+        'features.authTitle': 'Autenticacao Segura',
+        'features.auth': 'Tokens JWT armazenados no macOS Keychain. CVV passado por flag ou variavel de ambiente, nunca salvo em disco.',
+        'features.recipeTitle': 'Modo Receita',
+        'features.recipe': 'De uma receita a um agente de IA e ele busca, verifica precos e pede todos os ingredientes. Inclui traducoes de termos de supermercado.',
+        'features.crossTitle': 'Multiplataforma',
+        'features.cross': 'Binario Go puro. Instale via Homebrew, <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">go install</code> ou baixe do GitHub Releases. Sem dependencias.',
+        'install.title': 'Instalar',
+        'install.subtitle': 'Um comando. Sem dependencias.',
+        'quickstart.title': 'Inicio Rapido',
+        'quickstart.subtitle': 'Da instalacao ate as compras na sua porta.',
+        'quickstart.step1': 'Autentique-se no Zona Sul',
+        'quickstart.step2': 'Busque e adicione produtos',
+        'quickstart.step3': 'Escolha uma janela de entrega',
+        'quickstart.step4': 'Faca o pedido',
+        'faq.title': 'Perguntas Frequentes',
+        'faq.q1': 'O que e o zonasul CLI?',
+        'faq.a1': 'zonasul e uma ferramenta de linha de comando gratuita e open-source para pedir compras no supermercado Zona Sul no Rio de Janeiro. Permite buscar produtos, gerenciar carrinho, agendar entrega e fazer pedidos pelo terminal. Saida em JSON estruturado para agentes de IA, texto colorido para humanos e texto puro para pipelines. Escrito em Go sem dependencias.',
+        'faq.q2': 'Como instalo o zonasul?',
+        'faq.a2': 'No macOS ou Linux: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">brew install voska/tap/zonasul</code>. Com Go: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">go install github.com/voska/zonasul/cmd/zonasul@latest</code>. Ou baixe os binarios direto do <a href="https://github.com/voska/zonasul/releases" class="text-brand-400 hover:underline">GitHub Releases</a>.',
+        'faq.q3': 'Posso usar o zonasul com agentes de IA?',
+        'faq.a3': 'Sim. O zonasul foi projetado para agentes. Oferece saida JSON estruturada via <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--json</code>, codigos de saida legíveis por maquina (0-10), flag <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">--no-input</code> para uso nao-interativo e o comando <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">zonasul schema</code> para introspeccao. Instale como skill do Claude Code com: <code class="text-zinc-300 bg-surface-raised px-1.5 py-0.5 rounded text-xs">npx skills add -g voska/zonasul</code>. Passe uma receita e ele busca, confere precos e pede todos os ingredientes.',
+        'faq.q4': 'O Zona Sul entrega no meu bairro?',
+        'faq.a4': 'O Zona Sul entrega em bairros selecionados do Rio de Janeiro incluindo Leblon, Ipanema, Copacabana, Botafogo, Laranjeiras, Flamengo e arredores. Voce precisa de uma conta no <a href="https://www.zonasul.com.br" class="text-brand-400 hover:underline">zonasul.com.br</a> com um endereco de entrega cadastrado.',
+        'footer.disclaimer': 'zonasul e um projeto open-source independente. Sem afiliacao, endosso ou patrocinio da Zona Sul Supermercados ou VTEX.',
+      }
+    };
+
+    let currentLang = localStorage.getItem('zonasul-lang') ||
+      (navigator.language.startsWith('pt') ? 'pt' : 'en');
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('lang') === 'pt') currentLang = 'pt';
+    if (params.get('lang') === 'en') currentLang = 'en';
+
+    function applyLang(lang) {
+      currentLang = lang;
+      localStorage.setItem('zonasul-lang', lang);
+      document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+      document.getElementById('lang-toggle').textContent = lang === 'pt' ? 'PT' : 'EN';
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang][key]) el.textContent = i18n[lang][key];
+      });
+      document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        if (i18n[lang][key]) el.innerHTML = i18n[lang][key];
+      });
+    }
+
+    function toggleLang() {
+      applyLang(currentLang === 'en' ? 'pt' : 'en');
+    }
+
+    applyLang(currentLang);
+  </script>
+
+  <!-- Tab switcher + copy -->
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('active');
+        el.setAttribute('aria-selected', 'false');
+      });
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+      const btn = document.querySelector('[data-tab="' + tab + '"]');
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+    }
+
+    function copyHeroPrompt(btn) {
+      navigator.clipboard.writeText('Install the zonasul CLI skill for grocery ordering in Rio de Janeiro. Run: npx skills add -g voska/zonasul').then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        setTimeout(() => { btn.innerHTML = original; }, 2000);
+      });
+    }
+
+    function copyText(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<span class="text-brand-400 text-xs font-mono font-medium">Copied!</span>';
+        setTimeout(() => { btn.innerHTML = original; }, 1500);
+      });
+    }
+  </script>
+</body>
+</html>

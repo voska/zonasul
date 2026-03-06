@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/muesli/termenv"
 )
+
+var profile = termenv.ColorProfile()
 
 type Formatter struct {
 	json   bool
@@ -31,3 +35,27 @@ func (f *Formatter) Print(v any) error {
 }
 
 func (f *Formatter) IsJSON() bool { return f.json }
+
+func Hint(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	styled := termenv.String(msg).Foreground(profile.Color("8"))
+	fmt.Fprintln(os.Stderr, styled)
+}
+
+func Success(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	styled := termenv.String(msg).Foreground(profile.Color("2"))
+	fmt.Fprintln(os.Stderr, styled)
+}
+
+func Warn(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	styled := termenv.String(msg).Foreground(profile.Color("3"))
+	fmt.Fprintln(os.Stderr, styled)
+}
+
+func ErrorMsg(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	styled := termenv.String(msg).Foreground(profile.Color("1"))
+	fmt.Fprintln(os.Stderr, styled)
+}

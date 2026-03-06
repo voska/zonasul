@@ -3,10 +3,10 @@
 ## 1. Build the CLI
 
 ```bash
-go build -o zonasul ./cmd/zonasul
+make build
 ```
 
-Requires Go 1.21+. If using [mise](https://mise.jdx.dev/), Go is managed automatically.
+Requires Go 1.25+. If using [mise](https://mise.jdx.dev/), Go is managed automatically.
 
 ## 2. Create a Zona Sul Account
 
