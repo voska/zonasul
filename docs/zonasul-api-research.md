@@ -325,9 +325,57 @@ POST /api/checkout/pub/orderForm/{orderFormId}/transaction
 | addToCart | `a63161354718146c4282079551df81aaa8fa3d59584520cf5ea1c278fac0db33` | vtex.checkout-resources@0.x | vtex.checkout-graphql@0.x |
 | fixedPrice | `44afdf7de36ab2fbb4c4ed3389736005cbfebf85d4f05914db7b529a9e5f0362` | zonasul.fixed-price@0.x | zonasul.fixed-price@0.x |
 
+## Sessions API (Token Refresh + OrderForm Discovery)
+
+`GET /api/sessions?items=*` returns the full session state including:
+- `cookie.VtexIdclientAutCookie_zonasul.value` — the live JWT (even when HttpOnly)
+- `checkout.orderFormId.value` — the current orderFormId
+- `authentication.storeUserEmail.value` — logged-in user email
+- `profile.firstName.value`, `profile.lastName.value`, `profile.phone.value`
+
+The JWT has a 24h TTL (`exp - iat = 86400s`), but the VTEX session outlives the JWT. Calling the sessions API with the existing auth cookie returns a fresh JWT, enabling silent token refresh without re-login.
+
+This also means we don't need to persist `orderFormId` in a config file — we can fetch it from the session on every run.
+
+## Anti-Fraud (ClearSale)
+
+Zona Sul uses **ClearSale** for anti-fraud on credit card transactions. Without a valid ClearSale session, Cielo returns code 59 ("Suspected Fraud").
+
+### ClearSale Integration
+
+The storefront loads `https://device.clearsale.com.br/p/fp.js` with app key `b5qhnn79ksdoeru452lt`.
+
+Initialization:
+```js
+csdp('app', 'b5qhnn79ksdoeru452lt');
+csdp('outputsessionid', 'session-id');  // writes UUID to <input id="session-id">
+```
+
+The SDK generates a session UUID and sends device fingerprint data via two GET requests:
+
+1. **fp1.png** — canvas/WebGL hashes: `?bb={hash}&ba={hash}&a2={hash}&app={appKey}&sid={sessionId}`
+2. **fp2.png** — device telemetry: `?aa={userAgent}&ab={lang}&ac={colorDepth}&ae={screenH}&af={screenW}&ai={tzOffset}&...&app={appKey}&sid={sessionId}`
+
+### Payment Integration
+
+The ClearSale session ID is passed as `deviceFingerprint` in the payment `fields` object:
+```json
+{
+  "fields": {
+    "validationCode": "123",
+    "securityCode": "123",
+    "accountId": "...",
+    "bin": "1234",
+    "deviceFingerprint": "b03451ab-fd20-8e3b-d35d-932f50144870"
+  }
+}
+```
+
+The `deviceInfo` query parameter on the gateway URL is a separate base64-encoded string with screen dimensions (not the ClearSale session).
+
 ## Open Questions
 
-1. **Credit card tokenization**: How does VTEX handle card data in the payment attachment? Likely uses a gateway token via `/api/checkout/pub/gatewayCallback`. For v1, Pix and Dinheiro don't need card data.
-2. **Auth refresh**: The JWT is 24h. VTEX has a refresh token flow (`vid_rt` cookie) documented at `/docs/guides/refresh-token-flow-for-headless-implementations`. Need to test if classic login returns a refresh token.
+1. ~~**Credit card tokenization**: How does VTEX handle card data in the payment attachment?~~ **RESOLVED**: Saved cards use `accountId` + CVV. ClearSale `deviceFingerprint` required in `fields`.
+2. ~~**Auth refresh**: The JWT is 24h. VTEX has a refresh token flow (`vid_rt` cookie).~~ **RESOLVED**: Sessions API returns fresh JWT. No `vid_rt` needed.
 3. **Delivery mode session**: The AGENDADA selection is stored in the VTEX session. Need to determine the exact session API call to set this programmatically so we don't get prompted.
 4. **Custom auth domain**: `autenticacao.zonasul.com.br` may use different API endpoints than standard VTEX ID. Need to capture the actual auth network calls (lost due to cross-domain redirect during our session).

@@ -56,7 +56,16 @@ func (g *Globals) AuthedClient() (*vtex.Client, error) {
 	if err != nil || token == "" {
 		return nil, errfmt.Auth("not logged in (run: zonasul auth login)")
 	}
-	return vtex.NewClient(vtex.BaseURL, token), nil
+	client := vtex.NewClient(vtex.BaseURL, token)
+
+	// Try to refresh the token via VTEX session API
+	newToken, refreshErr := client.RefreshToken()
+	if refreshErr == nil && newToken != "" && newToken != token {
+		_ = keyring.Set(keyringService, keyringUser, newToken)
+		outfmt.Hint("Token refreshed.")
+	}
+
+	return client, nil
 }
 
 func (g *Globals) LoadConfig() (*config.Config, error) {
@@ -69,6 +78,20 @@ func (g *Globals) SaveConfig(cfg *config.Config) error {
 
 func (g *Globals) RequireAuth() (*vtex.Client, error) {
 	return g.AuthedClient()
+}
+
+// SessionOrderFormID fetches the orderFormId from the VTEX session,
+// falling back to the config file if the session doesn't have one.
+func (g *Globals) SessionOrderFormID(client *vtex.Client) string {
+	sess, err := client.GetSession()
+	if err == nil && sess.OrderFormID != "" {
+		return sess.OrderFormID
+	}
+	cfg, err := g.LoadConfig()
+	if err == nil && cfg.OrderFormID != "" {
+		return cfg.OrderFormID
+	}
+	return ""
 }
 
 func readLine(prompt string) string {

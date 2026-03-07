@@ -29,13 +29,10 @@ func (c *CheckoutCmd) Run(g *Globals) error {
 		return err
 	}
 
-	cfg, _ := g.LoadConfig()
-	of, err := client.GetOrderForm(cfg.OrderFormID)
+	of, err := client.GetOrderForm(g.SessionOrderFormID(client))
 	if err != nil {
 		return err
 	}
-	cfg.OrderFormID = of.OrderFormID
-	_ = g.SaveConfig(cfg)
 
 	if len(of.Items) == 0 {
 		if g.CLI.JSON {

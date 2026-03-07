@@ -32,14 +32,10 @@ func (c *CartShowCmd) Run(g *Globals) error {
 		return err
 	}
 
-	cfg, _ := g.LoadConfig()
-	of, err := client.GetOrderForm(cfg.OrderFormID)
+	of, err := client.GetOrderForm(g.SessionOrderFormID(client))
 	if err != nil {
 		return err
 	}
-
-	cfg.OrderFormID = of.OrderFormID
-	_ = g.SaveConfig(cfg)
 
 	if g.CLI.JSON {
 		return g.Formatter().Print(of)
@@ -64,14 +60,10 @@ func (c *CartAddCmd) Run(g *Globals) error {
 		return err
 	}
 
-	cfg, _ := g.LoadConfig()
-	of, err := client.AddToCart(cfg.OrderFormID, c.SKU, c.Qty)
+	of, err := client.AddToCart(g.SessionOrderFormID(client), c.SKU, c.Qty)
 	if err != nil {
 		return err
 	}
-
-	cfg.OrderFormID = of.OrderFormID
-	_ = g.SaveConfig(cfg)
 
 	if g.CLI.JSON {
 		return g.Formatter().Print(of)
@@ -90,8 +82,7 @@ func (c *CartRemoveCmd) Run(g *Globals) error {
 		return err
 	}
 
-	cfg, _ := g.LoadConfig()
-	of, err := client.UpdateItemQuantity(cfg.OrderFormID, c.Index, 0)
+	of, err := client.UpdateItemQuantity(g.SessionOrderFormID(client), c.Index, 0)
 	if err != nil {
 		return err
 	}
@@ -109,8 +100,7 @@ func (c *CartClearCmd) Run(g *Globals) error {
 		return err
 	}
 
-	cfg, _ := g.LoadConfig()
-	if err := client.RemoveAllItems(cfg.OrderFormID); err != nil {
+	if err := client.RemoveAllItems(g.SessionOrderFormID(client)); err != nil {
 		return err
 	}
 

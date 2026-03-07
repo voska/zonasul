@@ -305,6 +305,11 @@ func (c *Client) PayWithSavedCard(tx *TransactionResult, card SavedCard, cvv str
 	}
 	merchantName := strings.Split(paymentID, "-")[0]
 
+	// Generate ClearSale anti-fraud fingerprint session.
+	// The payment gateway validates credit card transactions against ClearSale's
+	// device fingerprint data. Without this, transactions get Cielo code 59 (suspected fraud).
+	csSessionID, _ := GenerateClearSaleSession()
+
 	payload := []map[string]any{
 		{
 			"paymentSystem":            psID,
@@ -317,14 +322,17 @@ func (c *Client) PayWithSavedCard(tx *TransactionResult, card SavedCard, cvv str
 			"referenceValue":           orderValue,
 			"accountId":                card.AccountID,
 			"fields": map[string]string{
-				"validationCode": cvv,
-				"securityCode":   cvv,
-				"accountId":      card.AccountID,
-				"bin":            card.Bin,
+				"validationCode":    cvv,
+				"securityCode":      cvv,
+				"accountId":         card.AccountID,
+				"bin":               card.Bin,
+				"deviceFingerprint": csSessionID,
 			},
-			"id":               paymentID,
-			"interestRate":     0,
-			"installmentValue": orderValue,
+			"hasDefaultBillingAddress":  true,
+			"isBillingAddressDifferent": false,
+			"id":                        paymentID,
+			"interestRate":              0,
+			"installmentValue":          orderValue,
 			"transaction": map[string]string{
 				"id":           tx.TransactionID,
 				"merchantName": merchantName,
@@ -340,9 +348,8 @@ func (c *Client) PayWithSavedCard(tx *TransactionResult, card SavedCard, cvv str
 	if c.GatewayURL != "" {
 		paymentsURL = fmt.Sprintf("%s/api/payments/pub/transactions/%s/payments", c.GatewayURL, tx.TransactionID)
 	}
-	// deviceInfo is base64-encoded device data the gateway expects for fraud prevention
-	// Format: sw=width&sh=height&cd=colorDepth&tz=timezoneOffset&lang=language&java=false&sourceApplication=...
-	deviceInfo := "c3c9MTkyMCZzaD0xMDgwJmNkPTI0JnR6PTE4MCZsYW5nPXB0LUJSJmphdmE9ZmFsc2Umc291cmNlQXBwbGljYXRpb249em9uYXN1bC1jbGk="
+	// deviceInfo is base64-encoded screen/device data for the VTEX payment gateway
+	deviceInfo := "c3c9MTkyMCZzaD0xMDgwJmNkPTI0JnR6PTE4MCZsYW5nPXB0LUJSJmphdmE9ZmFsc2U="
 	gatewayURL := fmt.Sprintf("%s?&orderId=%s&redirect=false&callbackUrl=%s&deviceInfo=%s&an=%s",
 		paymentsURL, tx.OrderGroup, url.QueryEscape(callbackURL), deviceInfo, AccountName)
 

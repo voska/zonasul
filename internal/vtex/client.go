@@ -132,3 +132,57 @@ func (c *Client) PostJSONAbsolute(absoluteURL string, payload any) ([]byte, erro
 func (c *Client) SetAuthToken(token string) {
 	c.authToken = token
 }
+
+type Session struct {
+	AuthToken   string
+	OrderFormID string
+	Email       string
+}
+
+func (c *Client) GetSession() (*Session, error) {
+	body, err := c.Get("/api/sessions?items=cookie.VtexIdclientAutCookie_zonasul,checkout.orderFormId,authentication.storeUserEmail")
+	if err != nil {
+		return nil, fmt.Errorf("get session: %w", err)
+	}
+	var resp struct {
+		Namespaces struct {
+			Cookie struct {
+				Auth struct {
+					Value string `json:"value"`
+				} `json:"VtexIdclientAutCookie_zonasul"`
+			} `json:"cookie"`
+			Checkout struct {
+				OrderFormID struct {
+					Value string `json:"value"`
+				} `json:"orderFormId"`
+			} `json:"checkout"`
+			Authentication struct {
+				Email struct {
+					Value string `json:"value"`
+				} `json:"storeUserEmail"`
+			} `json:"authentication"`
+		} `json:"namespaces"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, fmt.Errorf("parse session: %w", err)
+	}
+	return &Session{
+		AuthToken:   resp.Namespaces.Cookie.Auth.Value,
+		OrderFormID: resp.Namespaces.Checkout.OrderFormID.Value,
+		Email:       resp.Namespaces.Authentication.Email.Value,
+	}, nil
+}
+
+// RefreshToken attempts to get a fresh JWT from the VTEX session.
+// Returns the new token, or empty string if the session is expired.
+func (c *Client) RefreshToken() (string, error) {
+	sess, err := c.GetSession()
+	if err != nil {
+		return "", err
+	}
+	if sess.AuthToken == "" {
+		return "", nil
+	}
+	c.authToken = sess.AuthToken
+	return sess.AuthToken, nil
+}

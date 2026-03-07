@@ -18,8 +18,7 @@ func (c *DeliveryWindowsCmd) Run(g *Globals) error {
 		return err
 	}
 
-	cfg, _ := g.LoadConfig()
-	windows, err := client.GetDeliveryWindows(cfg.OrderFormID)
+	windows, err := client.GetDeliveryWindows(g.SessionOrderFormID(client))
 	if err != nil {
 		return err
 	}
