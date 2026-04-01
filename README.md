@@ -16,11 +16,14 @@ $ zonasul search "banana" --limit 3
 $ zonasul cart add 33277 --qty 3
 Added 33277 to cart.
 
-$ zonasul delivery windows --json
-[{"index":0,"start":"2026-03-06T14:01:00Z","end":"2026-03-06T16:00:59Z","price":700}]
+$ zonasul list order diarista
+Added SKU 39908
+Added SKU 135
+Added SKU 12274
+Added SKU 33297
 
-$ zonasul checkout --window 0 --cvv 123 --confirm
-Order placed! ID: v-1234567890
+$ zonasul checkout --window 0 --payment credit --cvv 123 --confirm
+Order placed! ID: 1621763420899
 ```
 
 Run `zonasul --help` for the full command tree, or `zonasul schema --json` for machine-readable introspection.
@@ -44,14 +47,26 @@ go install github.com/voska/zonasul/cmd/zonasul@latest
 ## Quick Start
 
 ```bash
-# Login (paste JWT from browser DevTools)
-zonasul auth login
+# Login with email and password (credentials stored for auto-refresh)
+zonasul auth login --email you@example.com --password yourpass
 
 # Search products (use Portuguese)
 zonasul search "feijao preto" --json
 
 # Add items by SKU
 zonasul cart add 33277 --qty 3
+
+# Build reusable lists
+zonasul list add weekly 33277
+zonasul list add weekly 6180
+zonasul list order weekly          # add all to cart
+
+# Favorites shorthand
+zonasul fav add 33277
+zonasul fav order
+
+# Reorder from last order
+zonasul cart reorder
 
 # View cart
 zonasul cart --json
@@ -66,16 +81,52 @@ zonasul checkout --window 0 --confirm
 zonasul checkout --window 0 --payment credit --cvv 123 --confirm
 ```
 
-## Getting Credentials
+## Authentication
 
-Zona Sul uses VTEX custom OAuth — there's no API key. You authenticate by pasting a JWT token from the browser:
+Three ways to log in:
 
-1. Open [zonasul.com.br](https://www.zonasul.com.br) and log in
-2. Open DevTools > Application > Cookies > `www.zonasul.com.br`
-3. Copy the value of `VtexIdclientAutCookie_zonasul`
-4. Run `zonasul auth login` and paste the token
+```bash
+# Email and password (recommended — enables auto-refresh)
+zonasul auth login --email you@example.com --password yourpass
 
-The token lasts 24 hours. Re-run `zonasul auth login` when it expires.
+# Environment variables (for CI/headless)
+ZONASUL_EMAIL=you@example.com ZONASUL_PASSWORD=yourpass zonasul auth login
+
+# Manual JWT token (from browser DevTools)
+zonasul auth login --token <VtexIdclientAutCookie_zonasul>
+```
+
+Email/password login stores credentials locally (`~/.config/zonasul/credentials.json` + keychain) so the CLI can auto-refresh expired tokens. You log in once and every command just works.
+
+## Lists and Favorites
+
+Named SKU lists live in `~/.config/zonasul/lists.json`:
+
+```bash
+zonasul list show                  # show all lists
+zonasul list show diarista         # show items in a list
+zonasul list add diarista 39908    # add SKU to list
+zonasul list remove diarista 39908 # remove SKU from list
+zonasul list order diarista        # add all to cart
+zonasul list delete diarista       # delete entire list
+```
+
+`fav` is a shorthand for the `favorites` list:
+
+```bash
+zonasul fav add 18868              # add to favorites
+zonasul fav                        # show favorites
+zonasul fav order                  # add all favorites to cart
+```
+
+## Reorder
+
+Re-add items from a previous order:
+
+```bash
+zonasul cart reorder               # from most recent order
+zonasul cart reorder <order-id>    # from a specific order
+```
 
 ## Agent Skill
 
@@ -99,9 +150,11 @@ Environment variable overrides: `ZONASUL_JSON=1`, `ZONASUL_PLAIN=1`, `ZONASUL_NO
 
 | Command | Description |
 |---------|-------------|
-| `auth login\|status\|logout` | Authentication |
+| `auth login\|status\|logout` | Authentication (email/password, token, or OAuth) |
 | `search <query>` | Search products |
-| `cart [show\|add\|remove\|clear]` | Cart management |
+| `cart [show\|add\|remove\|clear\|reorder]` | Cart management |
+| `list [show\|add\|remove\|order\|delete]` | Named SKU lists |
+| `fav [show\|add\|remove\|order]` | Favorites (shorthand for `list favorites`) |
 | `delivery windows` | List delivery time slots |
 | `checkout` | Place an order (`--confirm` required) |
 | `orders` | List recent orders |
@@ -125,6 +178,16 @@ All commands support `--json`, `--plain`, and `--no-input`. Run `zonasul agent e
 | 8 | retryable | Transient error, safe to retry |
 | 9 | min_order | Cart below R$100 minimum |
 | 10 | config_error | Configuration error |
+
+## Config Files
+
+All config lives in `~/.config/zonasul/`:
+
+| File | Contents |
+|------|----------|
+| `config.json` | Address, orderFormId |
+| `credentials.json` | Email (password in keychain) |
+| `lists.json` | Named SKU lists and favorites |
 
 ## Development
 

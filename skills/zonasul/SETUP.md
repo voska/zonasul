@@ -1,59 +1,84 @@
 # First-Time Setup
 
-## 1. Build the CLI
+## 1. Install
 
 ```bash
-make build
+brew install voska/tap/zonasul
 ```
 
-Requires Go 1.25+. If using [mise](https://mise.jdx.dev/), Go is managed automatically.
+Or `go install github.com/voska/zonasul/cmd/zonasul@latest`. Requires Go 1.25+.
 
 ## 2. Create a Zona Sul Account
 
 If the user doesn't have an account:
-1. Open https://www.zonasul.com.br in a browser
+1. Open https://www.zonasul.com.br
 2. Click the person icon > "Cadastre-se"
 3. Register with CPF, email, name, phone, and delivery address
-4. Zona Sul delivers to select neighborhoods in Rio de Janeiro (Leblon, Ipanema, Copacabana, Botafogo, etc.)
+4. Zona Sul delivers to select neighborhoods in Rio de Janeiro
 
 ## 3. Authenticate
 
-Zona Sul uses a custom OAuth provider — classic email/password login is disabled on their VTEX backend. The CLI stores a JWT token in macOS Keychain.
+The recommended method stores credentials for automatic token refresh:
 
 ```bash
-./zonasul auth login
+zonasul auth login --email you@example.com --password yourpass
 ```
 
-Choose option 1 (paste JWT from browser):
-1. Open https://www.zonasul.com.br and log in normally
-2. Open DevTools > Application > Cookies > `www.zonasul.com.br`
-3. Copy the value of `VtexIdclientAutCookie_zonasul`
-4. Paste into the CLI prompt
+This performs the full Zona Sul OAuth flow, stores the email in `~/.config/zonasul/credentials.json` and the password in the system keychain. The JWT (24h TTL) is also stored in the keychain and auto-refreshes when expired.
 
-The token lasts 24 hours. Re-run `./zonasul auth login` when it expires.
+Alternative methods:
+
+```bash
+# Via environment variables (CI/headless)
+ZONASUL_EMAIL=you@example.com ZONASUL_PASSWORD=yourpass zonasul auth login
+
+# Via JWT token (manual, no auto-refresh)
+zonasul auth login --token <VtexIdclientAutCookie_zonasul>
+
+# Interactive (prompts for email/password)
+zonasul auth login
+```
+
+Verify auth:
+```bash
+zonasul auth status
+```
 
 ## 4. Set Up Saved Credit Card
 
-The CLI supports credit card checkout with a saved card. To save a card:
-1. Open https://www.zonasul.com.br/checkout/#/payment in the browser (with items in cart)
-2. Select "Cartao de credito" and fill in your card details
+To use credit card checkout, save a card through the browser first:
+1. Open https://www.zonasul.com.br/checkout/#/payment with items in cart
+2. Select "Cartao de credito" and fill in card details
 3. Check "Salvar este cartao de forma segura para proximas compras"
-4. Complete one order through the browser to save the card
+4. Complete one order through the browser
 
-Then configure the CLI to use the browser's orderForm (which has the saved card):
-1. In the browser, open DevTools > Application > Cookies
-2. Find `checkout.vtex.com` cookie > copy the `__ofid=` value (the orderFormId)
-3. Save it to the CLI config:
+Then link the browser's orderForm to the CLI:
+1. In DevTools > Application > Cookies, find `checkout.vtex.com`
+2. Copy the `__ofid=` value (the orderFormId)
+3. Save it:
 
 ```bash
 echo '{"orderFormId":"PASTE_ORDER_FORM_ID_HERE"}' > ~/.config/zonasul/config.json
 ```
 
-## 5. CVV Access
+## 5. CVV
 
-For credit card checkout, the CVV is required each time. Options:
+For credit card checkout, the CVV is required each time:
 
-- **Flag**: `./zonasul checkout --cvv XXX --confirm`
-- **Environment variable**: `ZONASUL_CVV=XXX`
+```bash
+zonasul checkout --cvv XXX --confirm
+# or
+ZONASUL_CVV=XXX zonasul checkout --confirm
+```
 
-Never store your CVV in plaintext config files.
+Never store CVV in plaintext config files.
+
+## 6. Headless / SSH
+
+On headless macOS (e.g., SSH), the keychain must be unlocked first:
+
+```bash
+security unlock-keychain -p '<user-password>' ~/Library/Keychains/login.keychain-db
+```
+
+After unlocking, all zonasul commands work normally over SSH.

@@ -7,9 +7,9 @@ Go CLI for ordering groceries from Zona Sul supermarket (zonasul.com.br) in Rio 
 ```
 cmd/zonasul/       # Thin CLI entry point (~40 lines)
 internal/
-  cmd/             # Kong command structs (auth, search, cart, delivery, checkout, orders, agent, schema)
-  vtex/            # VTEX API client (auth, search, cart, checkout)
-  config/          # Config management (~/.config/zonasul/)
+  cmd/             # Kong command structs (auth, search, cart, list, fav, delivery, checkout, orders, agent, schema)
+  vtex/            # VTEX API client (auth, search, cart, checkout, orders)
+  config/          # Config + credentials + lists (~/.config/zonasul/)
   errfmt/          # Typed errors with exit codes
   outfmt/          # Triple output mode (human/plain/json) + colored stderr
 skills/zonasul/    # Claude Code agent skill
@@ -21,7 +21,7 @@ docs/              # API research, design docs
 - **Language**: Go (single static binary)
 - **CLI framework**: Kong (struct-tag-based parser)
 - **Platform**: VTEX IO (Zona Sul's ecommerce backend)
-- **Auth**: VTEX ID JWT stored in macOS Keychain
+- **Auth**: Credential login via custom OAuth + JWT stored in macOS Keychain, auto-refresh on expiry
 - **Output**: muesli/termenv for colored stderr
 
 ## Key Context
@@ -31,6 +31,9 @@ docs/              # API research, design docs
 - Add-to-cart uses GraphQL mutation via `/_v/private/graphql/v1`
 - Checkout uses standard VTEX REST API (`/api/checkout/pub/orderForm/...`)
 - Auth cookie is `VtexIdclientAutCookie_zonasul` (JWT, 24h TTL, HttpOnly)
+- Auth flow: classic VTEX auth is disabled; login goes through `autenticacao.zonasul.com.br/api/login` (Laravel app) then follows OAuth redirect chain to extract JWT
+- Credentials stored: email in `~/.config/zonasul/credentials.json`, password in keychain (`zonasul-cli/login-password`)
+- Auto-refresh: `AuthedClient()` detects expired tokens and re-authenticates using stored credentials
 - Prices from VTEX are in centavos (879 = R$8.79)
 - Delivery address: R. das Laranjeiras, 100 Apto 200, Laranjeiras, Rio de Janeiro, CEP 22240-003
 - GraphQL query hashes and full API details are in `docs/zonasul-api-research.md`
@@ -49,15 +52,28 @@ Follow steipete's agent-friendly CLI conventions:
 ## Commands
 
 ```
-zonasul auth login/status/logout
+zonasul auth login [--email X --password Y | --token JWT]
+zonasul auth status/logout
 zonasul search <query> [--limit N] [--json]
-zonasul cart [show | add <sku> --qty N | remove <index> | clear]
+zonasul cart [show | add <sku> --qty N | remove <index> | clear | reorder [order-id]]
+zonasul list [show [name] | add <name> <sku> | remove <name> <sku> | order <name> | delete <name>]
+zonasul fav [show | add <sku> | remove <sku> | order]
 zonasul delivery windows [--json]
 zonasul checkout [--window N] [--payment pix|credit|cash|vr|alelo|ticket] [--cvv XXX] [--confirm]
 zonasul orders [--json]
 zonasul agent exit-codes [--json]
 zonasul schema [--json]
 ```
+
+## Config Files
+
+All config in `~/.config/zonasul/` (dir 0700, files 0600):
+
+| File | Contents |
+|------|----------|
+| `config.json` | Address, orderFormId |
+| `credentials.json` | Email for auto-refresh (password in keychain) |
+| `lists.json` | Named SKU lists (`{"diarista": ["39908","135"], "favorites": ["18868"]}`) |
 
 ## Development
 
@@ -74,3 +90,4 @@ make fmt      # Format code
 - Never hardcode credentials or tokens in source
 - The `docs/zonasul-api-research.md` file contains the full API surface captured from live network traffic - reference it for endpoint details, query hashes, and response shapes
 - Persisted GraphQL hashes may change if Zona Sul updates their VTEX apps - if search or cart operations break, re-capture the hashes from the live site
+- The custom OAuth flow (`CredentialLogin` in `vtex/auth.go`) drives `autenticacao.zonasul.com.br` -- if Zona Sul changes their auth app, this will break first
