@@ -16,6 +16,7 @@ import (
 
 const keyringService = "zonasul-cli"
 const keyringUser = "vtex-jwt"
+const keyringPassword = "login-password"
 
 type CLI struct {
 	JSON    bool             `help:"Output JSON for agent consumption." env:"ZONASUL_JSON"`
@@ -54,7 +55,8 @@ func (g *Globals) Client() *vtex.Client {
 func (g *Globals) AuthedClient() (*vtex.Client, error) {
 	token, err := keyring.Get(keyringService, keyringUser)
 	if err != nil || token == "" {
-		return nil, errfmt.Auth("not logged in (run: zonasul auth login)")
+		// No token — try credential login from stored credentials
+		return g.credentialRefresh()
 	}
 	client := vtex.NewClient(vtex.BaseURL, token)
 
@@ -63,9 +65,42 @@ func (g *Globals) AuthedClient() (*vtex.Client, error) {
 	if refreshErr == nil && newToken != "" && newToken != token {
 		_ = keyring.Set(keyringService, keyringUser, newToken)
 		outfmt.Hint("Token refreshed.")
+		return client, nil
+	}
+
+	// Verify the token is still valid
+	if _, authErr := client.AuthenticatedUser(); authErr != nil {
+		// Token expired — try credential login
+		refreshed, credErr := g.credentialRefresh()
+		if credErr != nil {
+			return nil, errfmt.Auth("token expired (run: zonasul auth login)")
+		}
+		return refreshed, nil
 	}
 
 	return client, nil
+}
+
+func (g *Globals) credentialRefresh() (*vtex.Client, error) {
+	creds, err := config.LoadCredentials()
+	if err != nil || creds.Email == "" {
+		return nil, errfmt.Auth("not logged in (run: zonasul auth login)")
+	}
+	password, err := keyring.Get(keyringService, keyringPassword)
+	if err != nil || password == "" {
+		return nil, errfmt.Auth("not logged in (run: zonasul auth login)")
+	}
+
+	outfmt.Hint("Token expired, re-authenticating...")
+	client := vtex.NewClient(vtex.BaseURL, "")
+	jwt, err := client.CredentialLogin(creds.Email, password)
+	if err != nil {
+		return nil, errfmt.Wrap(errfmt.ExitAuth, "auto-refresh failed (run: zonasul auth login)", err)
+	}
+
+	_ = keyring.Set(keyringService, keyringUser, jwt)
+	outfmt.Hint("Token refreshed.")
+	return vtex.NewClient(vtex.BaseURL, jwt), nil
 }
 
 func (g *Globals) LoadConfig() (*config.Config, error) {

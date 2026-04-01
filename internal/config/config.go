@@ -17,33 +17,61 @@ type Config struct {
 	OrderFormID  string `json:"orderFormId,omitempty"`
 }
 
-func DefaultPath() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "zonasul", "config.json")
+type Credentials struct {
+	Email string `json:"email,omitempty"`
 }
 
-func Load(path string) (*Config, error) {
+func DefaultDir() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".config", "zonasul")
+}
+
+func DefaultPath() string {
+	return filepath.Join(DefaultDir(), "config.json")
+}
+
+func CredentialsPath() string {
+	return filepath.Join(DefaultDir(), "credentials.json")
+}
+
+func LoadCredentials() (*Credentials, error) {
+	return loadJSON[Credentials](CredentialsPath())
+}
+
+func SaveCredentials(c *Credentials) error {
+	return saveJSON(CredentialsPath(), c)
+}
+
+func loadJSON[T any](path string) (*T, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &Config{}, nil
+			return new(T), nil
 		}
 		return nil, err
 	}
-	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
+	var v T
+	if err := json.Unmarshal(data, &v); err != nil {
 		return nil, err
 	}
-	return &cfg, nil
+	return &v, nil
 }
 
-func Save(path string, cfg *Config) error {
+func saveJSON(path string, v any) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(cfg, "", "  ")
+	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
 	}
 	return os.WriteFile(path, data, 0600)
+}
+
+func Load(path string) (*Config, error) {
+	return loadJSON[Config](path)
+}
+
+func Save(path string, cfg *Config) error {
+	return saveJSON(path, cfg)
 }
