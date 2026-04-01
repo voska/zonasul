@@ -35,7 +35,7 @@ docs/              # API research, design docs
 - Credentials stored: email in `~/.config/zonasul/credentials.json`, password in keychain (`zonasul-cli/login-password`)
 - Auto-refresh: `AuthedClient()` detects expired tokens and re-authenticates using stored credentials
 - Prices from VTEX are in centavos (879 = R$8.79)
-- Delivery address: R. das Laranjeiras, 100 Apto 200, Laranjeiras, Rio de Janeiro, CEP 22240-003
+- Delivery address is configured in `~/.config/zonasul/config.json` and set via the VTEX checkout API
 - GraphQL query hashes and full API details are in `docs/zonasul-api-research.md`
 
 ## CLI Design Patterns
