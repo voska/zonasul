@@ -27,3 +27,27 @@ func (c *Client) ListOrders() ([]Order, error) {
 	}
 	return resp.List, nil
 }
+
+type OrderItem struct {
+	ID       string `json:"id"`
+	SKU      string `json:"sellerSku"`
+	Name     string `json:"name"`
+	Quantity int    `json:"quantity"`
+}
+
+type OrderDetail struct {
+	OrderID string      `json:"orderId"`
+	Items   []OrderItem `json:"items"`
+}
+
+func (c *Client) GetOrder(orderID string) (*OrderDetail, error) {
+	body, err := c.Get(fmt.Sprintf("/api/oms/user/orders/%s", orderID))
+	if err != nil {
+		return nil, fmt.Errorf("get order: %w", err)
+	}
+	var detail OrderDetail
+	if err := json.Unmarshal(body, &detail); err != nil {
+		return nil, fmt.Errorf("get order parse: %w", err)
+	}
+	return &detail, nil
+}

@@ -15,7 +15,7 @@ func fullSchema(version string) map[string]any {
 				"name": "auth",
 				"help": "Authentication commands",
 				"subcommands": []map[string]any{
-					{"name": "login", "help": "Login via browser or JWT token", "flags": []string{"--token"}},
+					{"name": "login", "help": "Login via browser or JWT token", "flags": []string{"--token", "--email", "--password"}},
 					{"name": "status", "help": "Check auth state and token expiry"},
 					{"name": "logout", "help": "Clear stored credentials"},
 				},
@@ -34,6 +34,28 @@ func fullSchema(version string) map[string]any {
 					{"name": "add", "help": "Add item to cart", "args": []string{"sku"}, "flags": []string{"--qty"}},
 					{"name": "remove", "help": "Remove item from cart", "args": []string{"index"}},
 					{"name": "clear", "help": "Clear all items from cart"},
+					{"name": "reorder", "help": "Re-add items from a previous order", "args": []string{"order-id (optional)"}},
+				},
+			},
+			{
+				"name": "list",
+				"help": "Manage named SKU lists",
+				"args": []string{"name (optional)"},
+				"subcommands": []map[string]any{
+					{"name": "show", "help": "Show list contents (default)"},
+					{"name": "add", "help": "Add SKU to list", "args": []string{"sku"}},
+					{"name": "remove", "help": "Remove SKU from list", "args": []string{"sku"}},
+					{"name": "order", "help": "Add all items in list to cart", "flags": []string{"--qty"}},
+				},
+			},
+			{
+				"name": "fav",
+				"help": "Manage favorites (shorthand for list favorites)",
+				"subcommands": []map[string]any{
+					{"name": "show", "help": "Show favorites (default)"},
+					{"name": "add", "help": "Add SKU to favorites", "args": []string{"sku"}},
+					{"name": "remove", "help": "Remove SKU from favorites", "args": []string{"sku"}},
+					{"name": "order", "help": "Add all favorites to cart", "flags": []string{"--qty"}},
 				},
 			},
 			{

@@ -27,6 +27,8 @@ type CLI struct {
 	Auth     AuthCmd     `cmd:"" help:"Authentication commands."`
 	Search   SearchCmd   `cmd:"" help:"Search products."`
 	Cart     CartCmd     `cmd:"" help:"Manage shopping cart."`
+	List     ListCmd     `cmd:"" help:"Manage named SKU lists."`
+	Fav      FavCmd      `cmd:"" help:"Manage favorites (shorthand for list favorites)."`
 	Delivery DeliveryCmd `cmd:"" help:"Delivery options."`
 	Checkout CheckoutCmd `cmd:"" help:"Place an order."`
 	Orders   OrdersCmd   `cmd:"" help:"List recent orders."`

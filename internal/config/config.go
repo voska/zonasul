@@ -75,3 +75,50 @@ func Load(path string) (*Config, error) {
 func Save(path string, cfg *Config) error {
 	return saveJSON(path, cfg)
 }
+
+// Lists maps list names to SKU arrays.
+type Lists map[string][]string
+
+func ListsPath() string {
+	return filepath.Join(DefaultDir(), "lists.json")
+}
+
+func LoadLists() (Lists, error) {
+	data, err := os.ReadFile(ListsPath())
+	if err != nil {
+		if os.IsNotExist(err) {
+			return Lists{}, nil
+		}
+		return nil, err
+	}
+	var l Lists
+	if err := json.Unmarshal(data, &l); err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
+func SaveLists(l Lists) error {
+	return saveJSON(ListsPath(), l)
+}
+
+func (l Lists) Add(name, sku string) bool {
+	for _, s := range l[name] {
+		if s == sku {
+			return false
+		}
+	}
+	l[name] = append(l[name], sku)
+	return true
+}
+
+func (l Lists) Remove(name, sku string) bool {
+	skus := l[name]
+	for i, s := range skus {
+		if s == sku {
+			l[name] = append(skus[:i], skus[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
