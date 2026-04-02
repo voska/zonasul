@@ -6,7 +6,9 @@ import (
 	"github.com/voska/zonasul/internal/errfmt"
 )
 
-type DeliveryWindowsCmd struct{}
+type DeliveryWindowsCmd struct {
+	Limit int `help:"Max number of windows to show." default:"0"`
+}
 
 type DeliveryCmd struct {
 	Windows DeliveryWindowsCmd `cmd:"" help:"List available delivery windows."`
@@ -21,6 +23,10 @@ func (c *DeliveryWindowsCmd) Run(g *Globals) error {
 	windows, err := client.GetDeliveryWindows(g.SessionOrderFormID(client))
 	if err != nil {
 		return err
+	}
+
+	if c.Limit > 0 && len(windows) > c.Limit {
+		windows = windows[:c.Limit]
 	}
 
 	if len(windows) == 0 {
