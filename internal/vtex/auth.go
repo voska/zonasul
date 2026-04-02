@@ -226,6 +226,9 @@ func (c *Client) AuthenticatedUser() (string, error) {
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return "", err
 	}
+	if resp.User == "" {
+		return "", fmt.Errorf("token expired or invalid")
+	}
 	return resp.User, nil
 }
 

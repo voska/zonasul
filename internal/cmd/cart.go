@@ -70,6 +70,7 @@ func (c *CartAddCmd) Run(g *Globals) error {
 	if err != nil {
 		return err
 	}
+	g.PersistOrderFormID(of.OrderFormID)
 
 	if g.CLI.JSON {
 		return g.Formatter().Print(of)

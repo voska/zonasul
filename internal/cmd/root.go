@@ -119,9 +119,11 @@ func (g *Globals) RequireAuth() (*vtex.Client, error) {
 
 // SessionOrderFormID fetches the orderFormId from the VTEX session,
 // falling back to the config file if the session doesn't have one.
+// Persists the ID to config so it survives across CLI invocations.
 func (g *Globals) SessionOrderFormID(client *vtex.Client) string {
 	sess, err := client.GetSession()
 	if err == nil && sess.OrderFormID != "" {
+		g.PersistOrderFormID(sess.OrderFormID)
 		return sess.OrderFormID
 	}
 	cfg, err := g.LoadConfig()
@@ -129,6 +131,20 @@ func (g *Globals) SessionOrderFormID(client *vtex.Client) string {
 		return cfg.OrderFormID
 	}
 	return ""
+}
+
+func (g *Globals) PersistOrderFormID(id string) {
+	if id == "" {
+		return
+	}
+	cfg, _ := g.LoadConfig()
+	if cfg == nil {
+		cfg = &config.Config{}
+	}
+	if cfg.OrderFormID != id {
+		cfg.OrderFormID = id
+		_ = g.SaveConfig(cfg)
+	}
 }
 
 func readLine(prompt string) string {

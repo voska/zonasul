@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+
+	"github.com/voska/zonasul/internal/errfmt"
 )
 
 const (
@@ -53,9 +55,22 @@ func (c *Client) do(req *http.Request) ([]byte, error) {
 	}
 
 	if resp.StatusCode >= 400 {
-		return body, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
+		return body, httpError(resp.StatusCode, string(body))
 	}
 	return body, nil
+}
+
+func httpError(statusCode int, body string) error {
+	switch statusCode {
+	case 401:
+		return errfmt.Auth(fmt.Sprintf("HTTP 401: %s", body))
+	case 403:
+		return errfmt.Forbidden(fmt.Sprintf("HTTP 403: %s", body))
+	case 429:
+		return errfmt.RateLimit()
+	default:
+		return fmt.Errorf("HTTP %d: %s", statusCode, body)
+	}
 }
 
 func (c *Client) Get(path string) ([]byte, error) {
@@ -124,7 +139,7 @@ func (c *Client) PostJSONAbsolute(absoluteURL string, payload any) ([]byte, erro
 	}
 
 	if resp.StatusCode >= 400 {
-		return body, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
+		return body, httpError(resp.StatusCode, string(body))
 	}
 	return body, nil
 }
