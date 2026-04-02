@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" fill="none">
+  <rect width="800" height="200" rx="12" fill="#1a1b26"/>
+  <!-- Tool name -->
+  <text x="100" y="120" font-family="ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="72" font-weight="700" fill="#9ece6a">zona</text>
+  <text x="340" y="120" font-family="ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="72" font-weight="300" fill="#a9b1d6">sul</text>
+  <!-- Tagline -->
+  <text x="100" y="158" font-family="ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="18" fill="#565f89">Grocery ordering CLI for Zona Sul supermarket</text>
+  <!-- Example commands -->
+  <g transform="translate(540, 40)">
+    <text font-family="ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="14" fill="#7aa2f7" opacity="0.6">
+      <tspan x="0" dy="0"><tspan fill="#9ece6a" opacity="0.7">$</tspan> zonasul search "banana"</tspan>
+      <tspan x="0" dy="24"><tspan fill="#9ece6a" opacity="0.7">$</tspan> zonasul cart add 33277</tspan>
+      <tspan x="0" dy="24"><tspan fill="#9ece6a" opacity="0.7">$</tspan> zonasul list order weekly</tspan>
+      <tspan x="0" dy="24"><tspan fill="#9ece6a" opacity="0.7">$</tspan> zonasul checkout --confirm</tspan>
+    </text>
+  </g>
+</svg>

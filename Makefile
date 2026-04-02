@@ -2,7 +2,7 @@ VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 LDFLAGS := -s -w -X main.version=$(VERSION)
 BIN     := bin/zonasul
 
-.PHONY: build test lint clean fmt vet install
+.PHONY: build test lint clean fmt vet install ci
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o $(BIN) ./cmd/zonasul
@@ -21,6 +21,8 @@ vet:
 
 clean:
 	rm -rf bin/
+
+ci: fmt lint vet test build
 
 install: build
 	cp $(BIN) $(GOPATH)/bin/zonasul 2>/dev/null || cp $(BIN) ~/go/bin/zonasul

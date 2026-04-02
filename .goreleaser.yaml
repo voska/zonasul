@@ -35,6 +35,7 @@ changelog:
 
 brews:
   - name: zonasul
+    directory: Formula
     homepage: "https://github.com/voska/zonasul"
     description: "Zona Sul supermarket CLI for AI agents"
     license: "MIT"
@@ -49,3 +50,10 @@ brews:
       bin.install "zonasul"
     test: |
       system "#{bin}/zonasul", "agent", "exit-codes", "--json"
+
+scoops:
+  - name: zonasul
+    repository:
+      owner: voska
+      name: scoop-bucket
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"

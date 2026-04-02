@@ -1,11 +1,24 @@
-# zonasul — Zona Sul Supermarket CLI
+<p align="center">
+  <img src=".github/banner.svg" alt="zonasul" width="700" />
+</p>
 
-[![CI](https://github.com/voska/zonasul/actions/workflows/ci.yml/badge.svg)](https://github.com/voska/zonasul/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/voska/zonasul)](https://github.com/voska/zonasul/releases)
-[![Go](https://img.shields.io/github/go-mod/go-version/voska/zonasul)](https://go.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/voska/zonasul/actions/workflows/ci.yml"><img src="https://github.com/voska/zonasul/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/voska/zonasul/releases"><img src="https://img.shields.io/github/v/release/voska/zonasul" alt="Release" /></a>
+  <a href="https://go.dev/"><img src="https://img.shields.io/github/go-mod-go-version/voska/zonasul" alt="Go" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
+</p>
 
-CLI for ordering groceries from [Zona Sul](https://www.zonasul.com.br) supermarket in Rio de Janeiro. Designed for AI agents following [steipete CLI patterns](https://steipete.me/posts/agent-friendly-cli-tools). Data goes to stdout (parseable), hints/progress to stderr.
+CLI for ordering groceries from [Zona Sul](https://www.zonasul.com.br) supermarket in Rio de Janeiro, powered by the [VTEX](https://vtex.com) ecommerce platform.
+
+## Highlights
+
+- **Fast** -- direct VTEX API calls, no browser scraping, no Selenium
+- **Agent-friendly** -- `--json` on every command, structured exit codes, stderr-only progress
+- **Zero config** -- credential login with auto-refresh; log in once and every command just works
+- **Single binary** -- install via Homebrew, Scoop, or `go install`
+
+<p align="center"><img src="demo.gif" alt="demo" width="700" /></p>
 
 ```bash
 $ zonasul search "banana" --limit 3
@@ -26,8 +39,6 @@ $ zonasul checkout --window 0 --payment credit --cvv 123 --confirm
 Order placed! ID: 1621763420899
 ```
 
-Run `zonasul --help` for the full command tree, or `zonasul schema --json` for machine-readable introspection.
-
 ## Install
 
 **Homebrew** (macOS / Linux):
@@ -36,6 +47,16 @@ Run `zonasul --help` for the full command tree, or `zonasul schema --json` for m
 brew install voska/tap/zonasul
 ```
 
+**Scoop** (Windows):
+
+```powershell
+scoop bucket add voska https://github.com/voska/scoop-bucket
+scoop install zonasul
+```
+
+<details>
+<summary>Other install methods</summary>
+
 **Go**:
 
 ```bash
@@ -43,6 +64,8 @@ go install github.com/voska/zonasul/cmd/zonasul@latest
 ```
 
 **Binary**: download from [Releases](https://github.com/voska/zonasul/releases).
+
+</details>
 
 ## Quick Start
 
@@ -86,7 +109,7 @@ zonasul checkout --window 0 --payment credit --cvv 123 --confirm
 Three ways to log in:
 
 ```bash
-# Email and password (recommended — enables auto-refresh)
+# Email and password (recommended -- enables auto-refresh)
 zonasul auth login --email you@example.com --password yourpass
 
 # Environment variables (for CI/headless)
@@ -136,15 +159,9 @@ Install as a [Claude Code skill](https://docs.anthropic.com/en/docs/agents-and-t
 npx skills add -g voska/zonasul
 ```
 
-## Output Modes
+## API
 
-| Flag | Description |
-|------|-------------|
-| (default) | Colored human-readable output, hints on stderr |
-| `--json` | Structured JSON to stdout |
-| `--plain` | Plain text for piping |
-
-Environment variable overrides: `ZONASUL_JSON=1`, `ZONASUL_PLAIN=1`, `ZONASUL_NO_INPUT=1`.
+Uses the [VTEX IO](https://vtex.com) ecommerce platform (Zona Sul's backend). Auth via credential login with auto-refreshing JWT. No API key required -- just your Zona Sul account email and password.
 
 ## Commands
 
@@ -163,6 +180,16 @@ Environment variable overrides: `ZONASUL_JSON=1`, `ZONASUL_PLAIN=1`, `ZONASUL_NO
 
 All commands support `--json`, `--plain`, and `--no-input`. Run `zonasul agent exit-codes` for the full exit code reference.
 
+## Output Modes
+
+| Flag | Description |
+|------|-------------|
+| (default) | Colored human-readable output, hints on stderr |
+| `--json` | Structured JSON to stdout |
+| `--plain` | Plain text for piping |
+
+Environment variable overrides: `ZONASUL_JSON=1`, `ZONASUL_PLAIN=1`, `ZONASUL_NO_INPUT=1`.
+
 ## Exit Codes
 
 | Code | Name | Meaning |
@@ -179,24 +206,15 @@ All commands support `--json`, `--plain`, and `--no-input`. Run `zonasul agent e
 | 9 | min_order | Cart below R$100 minimum |
 | 10 | config_error | Configuration error |
 
-## Config Files
-
-All config lives in `~/.config/zonasul/`:
-
-| File | Contents |
-|------|----------|
-| `config.json` | Address, orderFormId |
-| `credentials.json` | Email (password in keychain) |
-| `lists.json` | Named SKU lists and favorites |
-
 ## Development
 
 ```bash
 make build    # Build to bin/zonasul
 make test     # Run tests with race detector
-make lint     # Run linter
+make lint     # Run golangci-lint
 make vet      # Run go vet
 make fmt      # Format code
+make ci       # fmt + lint + vet + test + build
 ```
 
 ## License
