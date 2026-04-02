@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/voska/zonasul/actions/workflows/ci.yml"><img src="https://github.com/voska/zonasul/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/voska/zonasul/releases"><img src="https://img.shields.io/github/v/release/voska/zonasul" alt="Release" /></a>
-  <a href="https://go.dev/"><img src="https://img.shields.io/github/go-mod-go-version/voska/zonasul" alt="Go" /></a>
+  <a href="https://go.dev/"><img src="https://img.shields.io/github/go-mod/go-version/voska/zonasul" alt="Go" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
 </p>
 

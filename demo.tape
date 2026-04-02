@@ -14,14 +14,14 @@ Sleep 3s
 
 Sleep 1s
 
-Type "zonasul cart add 33277 --qty 3"
+Type "zonasul orders"
 Sleep 500ms
 Enter
 Sleep 3s
 
 Sleep 1s
 
-Type "zonasul cart --json"
+Type "zonasul delivery windows"
 Sleep 500ms
 Enter
 Sleep 3s
