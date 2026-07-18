@@ -15,7 +15,7 @@ type CartAddCmd struct {
 
 type CartUpdateCmd struct {
 	Index int `arg:"" help:"Cart item index (from 'cart show')."`
-	Qty   int `help:"New absolute quantity (0 removes the item)." default:"1"`
+	Qty   int `help:"New absolute quantity (0 removes the item)." required:""`
 }
 
 type CartRemoveCmd struct {
@@ -116,6 +116,9 @@ func (c *CartUpdateCmd) Run(g *Globals) error {
 	of, err := client.GetOrderForm(g.SessionOrderFormID(client))
 	if err != nil {
 		return err
+	}
+	if len(of.Items) == 0 {
+		return errfmt.Usage("cart is empty — nothing to update")
 	}
 	if c.Index < 0 || c.Index >= len(of.Items) {
 		return errfmt.Usage(fmt.Sprintf("cart index %d out of range (0-%d) — run: zonasul cart show", c.Index, len(of.Items)-1))
