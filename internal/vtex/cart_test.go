@@ -151,3 +151,37 @@ func TestRemoveAllItems(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestUpdateItemQuantitySetsAbsoluteQuantity(t *testing.T) {
+	var got struct {
+		Items []struct {
+			Index    int `json:"index"`
+			Quantity int `json:"quantity"`
+		} `json:"orderItems"`
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" || r.URL.Path != "/api/checkout/pub/orderForm/abc123/items/update" {
+			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+		if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+			t.Fatalf("decode payload: %v", err)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"orderFormId": "abc123",
+			"items":       []any{},
+			"totalizers":  []any{},
+		})
+	}))
+	defer srv.Close()
+
+	c := vtex.NewClient(srv.URL, "test-jwt")
+	if _, err := c.UpdateItemQuantity("abc123", 2, 6); err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Items) != 1 {
+		t.Fatalf("expected 1 orderItem, got %d", len(got.Items))
+	}
+	if got.Items[0].Index != 2 || got.Items[0].Quantity != 6 {
+		t.Errorf("expected {index:2, quantity:6}, got %+v", got.Items[0])
+	}
+}

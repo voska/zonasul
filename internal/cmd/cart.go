@@ -13,8 +13,13 @@ type CartAddCmd struct {
 	Qty int    `help:"Quantity." default:"1"`
 }
 
+type CartUpdateCmd struct {
+	Index int `arg:"" help:"Cart item index (from 'cart show')."`
+	Qty   int `help:"New absolute quantity (0 removes the item)." required:""`
+}
+
 type CartRemoveCmd struct {
-	Index int `arg:"" help:"Cart item index to remove."`
+	Index int `arg:"" help:"Cart item index."`
 }
 
 type CartClearCmd struct{}
@@ -26,8 +31,9 @@ type CartReorderCmd struct {
 
 type CartCmd struct {
 	Show    CartShowCmd    `cmd:"" default:"1" help:"Show current cart contents."`
-	Add     CartAddCmd     `cmd:"" help:"Add item to cart."`
-	Remove  CartRemoveCmd  `cmd:"" help:"Remove item from cart."`
+	Add     CartAddCmd     `cmd:"" help:"Add a new SKU to the cart (errors if SKU already in cart; use 'cart update' to change quantity)."`
+	Update  CartUpdateCmd  `cmd:"" help:"Set absolute quantity of a cart line item (0 removes it)."`
+	Remove  CartRemoveCmd  `cmd:"" help:"Remove a cart line item (alias for 'cart update <index> --qty 0')."`
 	Clear   CartClearCmd   `cmd:"" help:"Clear all items from cart."`
 	Reorder CartReorderCmd `cmd:"" help:"Re-add items from a previous order."`
 }
@@ -66,7 +72,25 @@ func (c *CartAddCmd) Run(g *Globals) error {
 		return err
 	}
 
-	of, err := client.AddToCart(g.SessionOrderFormID(client), c.SKU, c.Qty)
+	orderFormID := g.SessionOrderFormID(client)
+
+	// Fail loud if SKU already in cart — VTEX silently no-ops in that case
+	// and the user gets a misleading "Added to cart" message. Use cart update
+	// to change the quantity of an existing line item.
+	of, err := client.GetOrderForm(orderFormID)
+	if err != nil {
+		return err
+	}
+	for i, item := range of.Items {
+		if item.ID == c.SKU {
+			return errfmt.Usage(fmt.Sprintf(
+				"SKU %s already in cart at index %d (qty=%d); use `zonasul cart update %d --qty %d` to change quantity",
+				c.SKU, i, item.Quantity, i, item.Quantity+c.Qty,
+			))
+		}
+	}
+
+	of, err = client.AddToCart(orderFormID, c.SKU, c.Qty)
 	if err != nil {
 		return err
 	}
@@ -83,13 +107,28 @@ func (c *CartAddCmd) Run(g *Globals) error {
 	return nil
 }
 
-func (c *CartRemoveCmd) Run(g *Globals) error {
+func (c *CartUpdateCmd) Run(g *Globals) error {
 	client, err := g.RequireAuth()
 	if err != nil {
 		return err
 	}
 
-	of, err := client.UpdateItemQuantity(g.SessionOrderFormID(client), c.Index, 0)
+	of, err := client.GetOrderForm(g.SessionOrderFormID(client))
+	if err != nil {
+		return err
+	}
+	if len(of.Items) == 0 {
+		return errfmt.Usage("cart is empty — nothing to update")
+	}
+	if c.Index < 0 || c.Index >= len(of.Items) {
+		return errfmt.Usage(fmt.Sprintf("cart index %d out of range (0-%d) — run: zonasul cart show", c.Index, len(of.Items)-1))
+	}
+	if c.Qty < 0 {
+		return errfmt.Usage("--qty must be >= 0 (use 0 to remove)")
+	}
+
+	prevQty := of.Items[c.Index].Quantity
+	of, err = client.UpdateItemQuantity(of.OrderFormID, c.Index, c.Qty)
 	if err != nil {
 		return err
 	}
@@ -97,8 +136,22 @@ func (c *CartRemoveCmd) Run(g *Globals) error {
 	if g.CLI.JSON {
 		return g.Formatter().Print(of)
 	}
-	outfmt.Success("Removed item %d from cart.", c.Index)
+	if c.Qty == 0 {
+		outfmt.Success("Removed item %d from cart.", c.Index)
+	} else {
+		outfmt.Success("Updated item %d: qty %d -> %d.", c.Index, prevQty, c.Qty)
+	}
+	for i, item := range of.Items {
+		fmt.Printf("%-4d %-50s x%-3d R$%.2f\n", i, item.Name, item.Quantity, float64(item.SellingPrice*item.Quantity)/100)
+	}
+	for _, t := range of.Totalizers {
+		fmt.Printf("%-55s R$%.2f\n", t.Name, float64(t.Value)/100)
+	}
 	return nil
+}
+
+func (c *CartRemoveCmd) Run(g *Globals) error {
+	return (&CartUpdateCmd{Index: c.Index, Qty: 0}).Run(g)
 }
 
 func (c *CartClearCmd) Run(g *Globals) error {
