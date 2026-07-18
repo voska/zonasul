@@ -18,7 +18,17 @@ type SearchResult struct {
 	UnitMult  float64 `json:"unitMultiplier"`
 }
 
-const searchHash = "31d3fa494df1fc41efef6d16dd96a96e6911b8aed7a037868699a1f3f4d365de"
+// searchHash is the VTEX Intelligent Search persisted-query SHA256.
+// VTEX rotates this whenever they ship a new search-graphql version. When
+// the hash is stale the API returns PERSISTED_QUERY_NOT_FOUND and the CLI
+// used to silently render "no results". Surfacing that error plus pinning
+// the hash in TestSearchHashCurrent means future rotations fail loudly in
+// CI instead of silently breaking search for users.
+//
+// To re-capture the current hash: open www.zonasul.com.br in a browser,
+// search for any term, and read the `extensions.persistedQuery.sha256Hash`
+// field off the `productSearchV3` request to /_v/segment/graphql/v1.
+const searchHash = "b398fc0a2fd04ea5d4f7a94c732c10fb1bf64f8f9a2b31c92aee6a5e796457c9"
 
 func (c *Client) Search(query string, limit int) ([]SearchResult, error) {
 	if limit <= 0 {
@@ -66,7 +76,14 @@ func (c *Client) Search(query string, limit int) ([]SearchResult, error) {
 		return nil, fmt.Errorf("search: %w", err)
 	}
 
-	var resp struct {
+	var raw struct {
+		Errors []struct {
+			Message    string `json:"message"`
+			Name       string `json:"name"`
+			Extensions struct {
+				Code string `json:"code"`
+			} `json:"extensions"`
+		} `json:"errors"`
 		Data struct {
 			ProductSearch struct {
 				Products []struct {
@@ -91,12 +108,20 @@ func (c *Client) Search(query string, limit int) ([]SearchResult, error) {
 		} `json:"data"`
 	}
 
-	if err := json.Unmarshal(body, &resp); err != nil {
+	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil, fmt.Errorf("search parse: %w", err)
+	}
+	if len(raw.Errors) > 0 {
+		first := raw.Errors[0]
+		detail := first.Message
+		if first.Extensions.Code != "" {
+			detail = first.Extensions.Code + ": " + first.Message
+		}
+		return nil, fmt.Errorf("search: VTEX rejected the request (%s); the persisted-query hash may be stale — re-capture from a live browser session", detail)
 	}
 
 	var results []SearchResult
-	for _, p := range resp.Data.ProductSearch.Products {
+	for _, p := range raw.Data.ProductSearch.Products {
 		for _, item := range p.Items {
 			r := SearchResult{
 				ProductID: p.ProductID,

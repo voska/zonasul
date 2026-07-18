@@ -81,8 +81,10 @@ GET /_v/segment/graphql/v1?workspace=master&maxAge=short&appsEtag=remove
     &__bindingId=0a362f40-93e7-42c4-90c5-a3946de77fb3
     &operationName=productSearchV3
     &variables={}
-    &extensions={"persistedQuery":{"version":1,"sha256Hash":"31d3fa494df1fc41efef6d16dd96a96e6911b8aed7a037868699a1f3f4d365de","sender":"vtex.store-resources@0.x","provider":"vtex.search-graphql@0.x"},"variables":"{base64-encoded JSON}"}
+    &extensions={"persistedQuery":{"version":1,"sha256Hash":"b398fc0a2fd04ea5d4f7a94c732c10fb1bf64f8f9a2b31c92aee6a5e796457c9","sender":"vtex.store-resources@0.x","provider":"vtex.search-graphql@0.x"},"variables":"{base64-encoded JSON}"}
 ```
+
+**Capture date:** 2026-07-18. Re-capture whenever VTEX rotates (see "Persisted-Query Rotation" below).
 
 The `variables` field is base64-encoded JSON:
 ```json
@@ -377,5 +379,35 @@ The `deviceInfo` query parameter on the gateway URL is a separate base64-encoded
 
 1. ~~**Credit card tokenization**: How does VTEX handle card data in the payment attachment?~~ **RESOLVED**: Saved cards use `accountId` + CVV. ClearSale `deviceFingerprint` required in `fields`.
 2. ~~**Auth refresh**: The JWT is 24h. VTEX has a refresh token flow (`vid_rt` cookie).~~ **RESOLVED**: Sessions API returns fresh JWT. No `vid_rt` needed.
+
+## Persisted-Query Rotation
+
+VTEX rotates persisted-query SHA256 hashes whenever they ship a new version of the search-graphql app. When the hash in `internal/vtex/search.go` goes stale, the API returns `{"errors":[{"extensions":{"code":"PERSISTED_QUERY_NOT_FOUND"}}]}` and the CLI used to silently render "no results" — masking the bug.
+
+The CLI now surfaces that error and `TestSearchHashCurrent` pins the hash so CI fails loudly on the next rotation.
+
+To re-capture the current hash when the test breaks:
+
+```bash
+# 1. Capture live network traffic from the storefront
+#    Open Chrome DevTools → Network → filter "graphql" → search any term
+#    Read `extensions.persistedQuery.sha256Hash` from the productSearchV3 request
+
+# 2. Or use the headless capture script (puppeteer)
+node -e "
+import('puppeteer-core').then(async ({default: p}) => {
+  const b = await p.launch({headless:'new'});
+  const pg = await b.newPage();
+  const hits = [];
+  pg.on('request', r => { if (r.url().includes('productSearchV3')) hits.push(r.url()); });
+  await pg.goto('https://www.zonasul.com.br/', {waitUntil:'domcontentloaded'});
+  await pg.goto('https://www.zonasul.com.br/banana', {waitUntil:'networkidle2'});
+  console.log(hits[0]);
+  await b.close();
+});
+"
+
+# 3. Update internal/vtex/search.go (searchHash constant) and update the
+#    expected hash in TestSearchHashCurrent, plus docs/zonasul-api-research.md
 3. **Delivery mode session**: The AGENDADA selection is stored in the VTEX session. Need to determine the exact session API call to set this programmatically so we don't get prompted.
 4. **Custom auth domain**: `autenticacao.zonasul.com.br` may use different API endpoints than standard VTEX ID. Need to capture the actual auth network calls (lost due to cross-domain redirect during our session).
