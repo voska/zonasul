@@ -3,3 +3,5 @@ bin/
 dist/
 *.exe
 .DS_Store
+go.work
+go.work.sum
