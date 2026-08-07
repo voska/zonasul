@@ -30,6 +30,13 @@ Three facts about Zona Sul cannot be discovered from the API:
 Everything else — payment systems, seller IDs, delivery SLAs, the login method — is
 discovered at runtime.
 
+## Favorites and lists
+
+Zona Sul does not have the `vtex.wish-list` app installed, so there is no
+server-side wishlist to read. `fav` and `list` are local, stored in
+`~/.config/zonasul/lists.json`. (The frescatto CLI, on the same library, reads
+its store's real wishlist — the library adapts per store.)
+
 ## Search
 
 Uses Intelligent Search REST with catalog REST fallback. This replaced the persisted

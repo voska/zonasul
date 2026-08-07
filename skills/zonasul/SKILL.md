@@ -120,7 +120,8 @@ zonasul list order diarista --qty 2 # all with qty 2
 zonasul list delete diarista       # delete list
 ```
 
-`fav` is shorthand for the `favorites` list:
+`fav` is shorthand for the `favorites` list. Zona Sul has no server-side
+wishlist, so favorites are stored locally on this machine:
 
 ```bash
 zonasul fav add 18868              # add to favorites
