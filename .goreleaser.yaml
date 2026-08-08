@@ -33,14 +33,12 @@ changelog:
       - "^chore:"
       - "^ci:"
 
-homebrew_casks:
+brews:
   - name: zonasul
-    directory: Casks
+    directory: Formula
     homepage: "https://github.com/voska/zonasul"
     description: "Zona Sul supermarket CLI for AI agents"
     license: "MIT"
-    url:
-      verified: github.com/voska/zonasul
     repository:
       owner: voska
       name: homebrew-tap
@@ -48,12 +46,10 @@ homebrew_casks:
     commit_author:
       name: voska-bot
       email: bot@voska.dev
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/zonasul"]
-          end
+    install: |
+      bin.install "zonasul"
+    test: |
+      system "#{bin}/zonasul", "agent", "exit-codes", "--json"
 
 scoops:
   - name: zonasul
