@@ -2,7 +2,7 @@ module github.com/voska/zonasul
 
 go 1.25.0
 
-require github.com/voska/vtexkit v0.4.2
+require github.com/voska/vtexkit v0.4.3
 
 require (
 	github.com/alecthomas/kong v1.16.0 // indirect
