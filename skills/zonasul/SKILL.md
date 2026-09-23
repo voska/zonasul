@@ -51,6 +51,10 @@ zonasul search "feijao preto" --limit 5 --json
 
 Search in Portuguese. Results include SKU ID, name, price, and availability.
 
+Every result carries both `sku` and `productId`. Commands take the `sku` —
+the two are separate sequences and the same number routinely appears in
+both, naming two unrelated products.
+
 ### Step 2: Add Items to Cart
 
 ```bash
