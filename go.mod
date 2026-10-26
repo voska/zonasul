@@ -2,6 +2,8 @@ module github.com/voska/zonasul
 
 go 1.25.0
 
+toolchain go1.26.10
+
 require github.com/voska/vtexkit v0.6.0
 
 require (
