@@ -4,7 +4,7 @@ go 1.25.0
 
 toolchain go1.26.10
 
-require github.com/voska/vtexkit v0.6.0
+require github.com/voska/vtexkit v0.6.1-0.20261102140329-1e6bd974b7d6
 
 require (
 	github.com/alecthomas/kong v1.16.0 // indirect
