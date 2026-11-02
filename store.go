@@ -26,7 +26,7 @@ import (
 var Store = store.Store{
 	Name:        "zonasul",
 	DisplayName: "Zona Sul",
-	BaseURL:     "https://www.zonasul.com.br",
+	BaseURL:     "https://zonasul.vtexcommercestable.com.br",
 	MinOrder:    money.Reais(100),
 	OAuth:       Driver{},
 	Quirks:      store.ClearSaleFingerprint | store.GatewayCallback,
