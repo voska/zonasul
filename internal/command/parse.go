@@ -27,13 +27,16 @@ func Options(version string) []kong.Option {
 				}
 				if node.Path() == "checkout run" {
 					for _, flag := range node.Flags {
+						switch flag.Name {
+						case "confirm", "payment", "window", "cvv":
+							flag.Envs = nil
+							flag.Tag.Envs = nil
+						}
 						if flag.Name == "payment" {
 							flag.Help = "Saved credit card ID from checkout payments. Pix/cash unsupported."
 						}
 						if flag.Name == "cvv" {
 							flag.Help = "Unsupported on BFF; do not supply card security codes."
-							flag.Envs = []string{}
-							flag.Tag.Envs = flag.Envs
 						}
 					}
 				}

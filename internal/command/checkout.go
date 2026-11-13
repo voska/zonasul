@@ -378,6 +378,9 @@ func (r *Runner) checkout(g *cli.Globals) error {
 		if card == nil {
 			return errfmt.Usage("pass --payment <saved-card-id> from checkout payments; Pix/cash are not supported")
 		}
+		if err := r.recordPaymentAttempt(g, o.ID); err != nil {
+			return err
+		}
 		updated, err := r.client().SetWindow(s.Token, o, *selected)
 		if err != nil {
 			return err

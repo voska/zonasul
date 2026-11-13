@@ -8,6 +8,8 @@ import (
 	"github.com/voska/vtexkit/cli"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -49,7 +51,7 @@ func checkoutServer(t *testing.T, card bool) (*Runner, func()) {
 		}
 		_, _ = w.Write([]byte(`{"success":true,"data":` + data + `}`))
 	}))
-	return &Runner{Client: bff.New(srv.URL, srv.Client())}, srv.Close
+	return &Runner{Client: bff.New(srv.URL, srv.Client()), stateDir: t.TempDir()}, srv.Close
 }
 
 func TestCheckoutPreviewReachesPaymentWithoutWriting(t *testing.T) {
@@ -146,7 +148,7 @@ func TestConfirmedCheckoutNeverClaimsIssuerSettlement(t *testing.T) {
 					var order map[string]any
 					_ = json.Unmarshal([]byte(weightedCart), &order)
 					order["acceptedOrderDetails"] = map[string]any{"scheduledDate": "2030-01-02", "scheduledStartTime": "13:00:00", "scheduledEndTime": "18:00:00"}
-					if pays > 0 {
+					if pays > 0 && !payFails {
 						order["status"] = 300
 						order["id"] = "completed-order"
 					}
@@ -177,8 +179,9 @@ func TestConfirmedCheckoutNeverClaimsIssuerSettlement(t *testing.T) {
 			g.CLI.Checkout.Run.Window = 0
 			g.CLI.Checkout.Run.Confirm = true
 			g.CLI.Checkout.Run.Payment = "card"
+			runner := &Runner{Client: bff.New(srv.URL, srv.Client()), stateDir: t.TempDir()}
 			var err error
-			text := output(t, func() { _, err = (&Runner{Client: bff.New(srv.URL, srv.Client())}).Run("checkout run", g) })
+			text := output(t, func() { _, err = runner.Run("checkout run", g) })
 			var typed *errfmt.Error
 			if !errors.As(err, &typed) || typed.Code != 11 || pays != 1 {
 				t.Fatalf("pays=%d err=%v", pays, err)
@@ -194,6 +197,16 @@ func TestConfirmedCheckoutNeverClaimsIssuerSettlement(t *testing.T) {
 			}
 			if strings.Contains(text+err.Error(), "private-") {
 				t.Fatal("private data in output")
+			}
+			// A new process must not repeat an ambiguous payment, even while
+			// /cart still reports the same open order.
+			if payFails {
+				_ = output(t, func() {
+					_, err = (&Runner{Client: bff.New(srv.URL, srv.Client()), stateDir: runner.stateDir}).Run("checkout run", g)
+				})
+				if !errors.As(err, &typed) || typed.Code != 11 || pays != 1 || !strings.Contains(err.Error(), "orders order") {
+					t.Fatalf("second confirmation: pays=%d err=%v", pays, err)
+				}
 			}
 		})
 	}
@@ -390,6 +403,67 @@ func TestBFFDoesNotReadLegacyCVVEnvironment(t *testing.T) {
 	}
 	if args.Checkout.Run.CVV != "" {
 		t.Fatal("legacy CVV environment entered BFF command")
+	}
+}
+
+func TestCheckoutIgnoresPaymentEnvironment(t *testing.T) {
+	t.Setenv("ZONASUL_CONFIRM", "true")
+	t.Setenv("ZONASUL_PAYMENT", "card")
+	t.Setenv("ZONASUL_WINDOW", "999")
+	for _, explicit := range []bool{false, true} {
+		t.Run(fmt.Sprint(explicit), func(t *testing.T) {
+			r, close := checkoutServer(t, true)
+			defer close()
+			var args cli.CLI
+			parser, err := kong.New(&args, Options("test")...)
+			if err != nil {
+				t.Fatal(err)
+			}
+			argv := []string{"checkout", "run", "--json"}
+			if explicit {
+				argv = append(argv, "--payment", "card", "--window", "0")
+			}
+			ctx, err := parser.Parse(argv)
+			if err != nil {
+				t.Fatal(err)
+			}
+			g := globals()
+			g.CLI = &args
+			text := output(t, func() { _, err = r.Run(ctx.Command(), g) })
+			if args.Checkout.Run.Confirm || !strings.Contains(text, `"dryRun":true`) || !strings.Contains(text, `"stage":"payment"`) {
+				t.Fatalf("environment submitted checkout: output=%s err=%v", text, err)
+			}
+			if explicit && (err != nil || !strings.Contains(text, `"ready":true`)) {
+				t.Fatalf("explicit selection ignored: output=%s err=%v", text, err)
+			}
+			if !explicit && (args.Checkout.Run.Payment != "pix" || args.Checkout.Run.Window != -1) {
+				t.Fatal("payment/window environment entered checkout")
+			}
+			entries, readErr := os.ReadDir(r.stateDir)
+			if readErr != nil || len(entries) != 0 {
+				t.Fatalf("preview recorded an attempt: entries=%v err=%v", entries, readErr)
+			}
+		})
+	}
+}
+
+func TestCheckoutCannotPayWithoutAttemptStorage(t *testing.T) {
+	r, close := checkoutServer(t, true)
+	defer close()
+	// A regular file cannot serve as a state directory.
+	stateDir := filepath.Join(t.TempDir(), "state")
+	if err := os.WriteFile(stateDir, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	r.stateDir = stateDir
+	g := globals()
+	g.CLI.Checkout.Run.Confirm = true
+	g.CLI.Checkout.Run.Payment = "card"
+	g.CLI.Checkout.Run.Window = 0
+	_, err := r.Run("checkout run", g)
+	var typed *errfmt.Error
+	if !errors.As(err, &typed) || typed.Code != 10 {
+		t.Fatalf("unrecorded checkout: err=%v", err)
 	}
 }
 

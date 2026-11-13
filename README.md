@@ -93,6 +93,15 @@ window. `--confirm --dry-run` is rejected. This backend uses the saved credit
 card and does not accept `--cvv`; Pix and cash are unsupported. There is no
 automatic retry after a payment attempt.
 
+`--confirm`, `--payment` and `--window` are command-line inputs only; their
+`ZONASUL_*` environment variables are ignored. Before any checkout write, the
+CLI records the order ID under `~/.config/zonasul/payment-attempts/`. A second
+confirmation for that order is refused with exit 11, including after a failed
+window update or payment request. Inspect `zonasul orders <UUID>` and verify
+the payment outcome before taking further action. Keep the attempt records.
+This protection covers invocations sharing that local state directory; BFF
+idempotency across machines has not been verified.
+
 **Settlement limitation:** the migrated BFF issuer-approval response has not
 been verified. An acknowledged submission prints `submitted_unverified`,
 `settlementVerified:false`, and exits 11 even if the order status is 300
@@ -137,7 +146,7 @@ automatic when stdin is not a terminal.
 | 8 | Transient request failure |
 | 9 | Store rule or unavailable migration command; read the error before retrying |
 | 10 | Configuration error or not ready to order |
-| 11 | Payment attempted, settlement unverified; never retry checkout |
+| 11 | Checkout attempt recorded, settlement unverified; never retry checkout |
 
 ## Development
 

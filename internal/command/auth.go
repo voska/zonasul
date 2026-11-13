@@ -27,7 +27,10 @@ type pending struct {
 	UserID string `json:"userId"`
 }
 
-type Runner struct{ Client *bff.Client }
+type Runner struct {
+	Client   *bff.Client
+	stateDir string
+}
 
 func (r *Runner) client() *bff.Client {
 	if r.Client == nil {
@@ -41,7 +44,7 @@ func (r *Runner) Run(command string, g *cli.Globals) (bool, error) {
 	name := strings.Split(command, " <")[0]
 	switch name {
 	case "exit-codes", "agent exit-codes":
-		codes := append(errfmt.ExitCodeTable(), errfmt.ExitCodeEntry{Code: bff.ExitSubmittedUnverified, Name: "submitted_unverified", Description: "Payment attempted; do not retry; verify issuer settlement", Transient: false})
+		codes := append(errfmt.ExitCodeTable(), errfmt.ExitCodeEntry{Code: bff.ExitSubmittedUnverified, Name: "submitted_unverified", Description: "Checkout attempt recorded; do not retry; inspect order and verify issuer settlement", Transient: false})
 		return true, g.Formatter().Print(codes)
 	case "search":
 		return true, r.catalog(g, false)
