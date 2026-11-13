@@ -27,7 +27,10 @@ type pending struct {
 	UserID string `json:"userId"`
 }
 
-type Runner struct{ Client *bff.Client }
+type Runner struct {
+	Client   *bff.Client
+	stateDir string
+}
 
 func (r *Runner) client() *bff.Client {
 	if r.Client == nil {
@@ -38,7 +41,25 @@ func (r *Runner) client() *bff.Client {
 
 // Run returns false only for commands that can still use the shared library.
 func (r *Runner) Run(command string, g *cli.Globals) (bool, error) {
-	switch command {
+	name := strings.Split(command, " <")[0]
+	switch name {
+	case "exit-codes", "agent exit-codes":
+		codes := append(errfmt.ExitCodeTable(), errfmt.ExitCodeEntry{Code: bff.ExitSubmittedUnverified, Name: "submitted_unverified", Description: "Checkout attempt recorded; do not retry; inspect order and verify issuer settlement", Transient: false})
+		return true, g.Formatter().Print(codes)
+	case "search":
+		return true, r.catalog(g, false)
+	case "product":
+		return true, r.catalog(g, true)
+	case "cart show", "cart add", "cart update", "cart remove", "cart clear":
+		return true, r.cart(g, strings.TrimPrefix(name, "cart "))
+	case "delivery windows":
+		return true, r.delivery(g)
+	case "checkout payments":
+		return true, r.payments(g)
+	case "checkout run":
+		return true, r.checkout(g)
+	case "orders":
+		return true, r.orders(g)
 	case "doctor":
 		return true, r.doctor(g)
 	case "auth login":
@@ -62,7 +83,7 @@ func (r *Runner) Run(command string, g *cli.Globals) (bool, error) {
 func legacyAllowed(command string) bool {
 	name := strings.Split(command, " <")[0]
 	switch name {
-	case "search", "product", "list show", "list add", "list remove", "list delete", "fav show", "fav add", "fav remove", "store info", "schema", "exit-codes", "agent exit-codes":
+	case "list show", "list add", "list remove", "list delete", "fav show", "fav add", "fav remove", "store info", "schema":
 		return true
 	}
 	return false
@@ -140,7 +161,7 @@ func (r *Runner) login(g *cli.Globals) error {
 	if err := saveSecret(g, "bff-session", Session{Email: email, Token: token, Password: password}); err != nil {
 		return err
 	}
-	outfmt.Success("Logged in as %s. Ordering is disabled in this build.", email)
+	outfmt.Success("Logged in as %s. Run doctor to check checkout readiness.", email)
 	return nil
 }
 

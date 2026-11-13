@@ -1,9 +1,7 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/voska/vtexkit/cli"
 	"github.com/voska/vtexkit/cli/errfmt"
@@ -23,25 +21,42 @@ func (r *Runner) doctor(g *cli.Globals) error {
 		checks = append(checks, check{Name: "logged in", Detail: err.Error(), Fix: "run: zonasul auth login"})
 	} else {
 		checks = append(checks, check{Name: "logged in", OK: true, Detail: "BFF identity verified"})
-		for _, item := range []struct{ name, path, missing string }{
-			{"delivery address", "/addresses", "restore a delivery address on www.zonasul.com.br"},
-			{"saved payment methods", "/payment-methods", "restore a payment method on www.zonasul.com.br"},
-		} {
-			var records []json.RawMessage
-			err := r.client().Request(http.MethodGet, item.path, session.Token, nil, &records)
-			result := check{Name: item.name, OK: err == nil && len(records) > 0, Detail: fmt.Sprintf("%d on the BFF account", len(records))}
-			if err != nil {
-				result.Detail = err.Error()
+		addresses, addressErr := r.addresses(session.Token)
+		defaults := 0
+		for _, a := range addresses {
+			if a.Default {
+				defaults++
 			}
-			if err == nil && len(records) == 0 {
+		}
+		cards, cardErr := r.client().Cards(session.Token)
+		for _, item := range []struct {
+			name    string
+			count   int
+			err     error
+			missing string
+		}{
+			{"delivery address", defaults, addressErr, "save one default delivery address on www.zonasul.com.br"},
+			{"saved payment methods", len(cards), cardErr, "save a credit card on www.zonasul.com.br"},
+		} {
+			result := check{Name: item.name, OK: item.err == nil && item.count > 0, Detail: fmt.Sprintf("%d on the BFF account", item.count)}
+			if item.name == "delivery address" {
+				result.OK = item.err == nil && item.count == 1
+			}
+			if item.err != nil {
+				result.Detail = item.err.Error()
+			} else if item.count == 0 {
 				result.Fix = item.missing
 			}
 			checks = append(checks, result)
 		}
 	}
-	checks = append(checks, check{Name: "CLI checkout", Detail: "BFF checkout integration is not available yet"})
+	checks = append(checks, check{Name: "CLI checkout", OK: true, Detail: "BFF cart, windows and saved-card checkout available; settlement requires issuer verification"})
+	ready := true
+	for _, c := range checks {
+		ready = ready && c.OK
+	}
 	if g.CLI.JSON || g.CLI.Plain || g.CLI.Quiet {
-		if err := g.Formatter().Print(map[string]any{"store": "zonasul", "backend": "bff", "ready": false, "checks": checks}); err != nil {
+		if err := g.Formatter().Print(map[string]any{"store": "zonasul", "backend": "bff", "ready": ready, "checks": checks}); err != nil {
 			return err
 		}
 	} else {
@@ -56,5 +71,8 @@ func (r *Runner) doctor(g *cli.Globals) error {
 			}
 		}
 	}
-	return errfmt.Config("not ready to order")
+	if !ready {
+		return errfmt.Config("not ready to order")
+	}
+	return nil
 }
