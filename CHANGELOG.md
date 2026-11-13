@@ -4,7 +4,10 @@
 
 ### Changed
 
-- Ordering commands are disabled while the new storefront integration is pending. They exit 9 without sending a cart or order request. `doctor` checks current account prerequisites and always exits 10 in this build.
+- Migrate catalog, cart, delivery windows and saved-credit-card checkout to the current BFF. Use `product:<UUID>` catalog handles; legacy numeric SKUs and `sku.reference` are not interchangeable. Local bulk ordering, reordering, delivery simulation and subscriptions remain disabled.
+- Preserve integer pack quantities and centavo pack prices; convert weight cart updates to kg and verify the full list after each mutation. Read back delivery scheduling before payment.
+- Make checkout previews read-only. `doctor` passes only with a verified session, delivery address and saved credit card. Payment submission requires an explicit saved-card ID and `--confirm`; no Pix/cash fallback or CVV.
+- Report any attempted payment as `submitted_unverified` with additive exit 11 until issuer settlement can be verified. Never retry a payment automatically or claim settlement from status alone.
 - Raw token login now requires an expected email and a token for the new backend. Use `ZONASUL_BFF_TOKEN`; the old `ZONASUL_TOKEN` VTEX cookie is ignored.
 
 ### Fixed

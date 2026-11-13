@@ -97,14 +97,20 @@ func TestPendingEmailCannotSwitchAccounts(t *testing.T) {
 }
 
 func TestLegacyCheckoutCannotRunWithBFFSession(t *testing.T) {
-	for _, cmd := range []string{"checkout run", "checkout payments", "cart add <sku>", "delivery windows", "orders <order-id>", "list order <name>", "fav order", "subs show"} {
+	keyring.MockInit()
+	_ = keyring.Set("zonasul-cli", "bff-session", `{"email":"test@example.invalid","token":"synthetic-token"}`)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("disabled command made a request: %s", r.URL.Path)
+	}))
+	defer srv.Close()
+	for _, cmd := range []string{"cart reorder <order-id>", "delivery simulate", "list order <name>", "fav order", "subs show"} {
 		g := globals()
-		handled, err := (&Runner{}).Run(cmd, g)
+		handled, err := (&Runner{Client: bff.New(srv.URL, srv.Client())}).Run(cmd, g)
 		if !handled || err == nil {
 			t.Errorf("legacy command %q fell through", cmd)
 		}
 	}
-	for _, cmd := range []string{"schema <command>", "list show <name>", "exit-codes"} {
+	for _, cmd := range []string{"schema <command>", "list show <name>"} {
 		handled, err := (&Runner{}).Run(cmd, globals())
 		if handled || err != nil {
 			t.Errorf("local command %q stopped working", cmd)
@@ -192,9 +198,9 @@ func TestKongCommandRouting(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	legacy := map[string]bool{"search": true, "product": true, "list show": true, "list add": true, "list remove": true, "list delete": true, "fav show": true, "fav add": true, "fav remove": true, "schema": true, "exit-codes": true, "agent exit-codes": true, "store info": true}
-	handled := map[string]bool{"auth login": true, "auth status": true, "auth code send": true, "auth code verify": true, "auth logout": true, "doctor": true}
-	disabled := map[string]bool{"cart show": true, "cart add": true, "cart update": true, "cart remove": true, "cart clear": true, "cart reorder": true, "list order": true, "fav order": true, "delivery windows": true, "delivery simulate": true, "checkout payments": true, "checkout run": true, "orders": true, "subs show": true, "subs pause": true, "subs resume": true, "subs skip": true, "subs unskip": true}
+	legacy := map[string]bool{"list show": true, "list add": true, "list remove": true, "list delete": true, "fav show": true, "fav add": true, "fav remove": true, "schema": true, "store info": true}
+	handled := map[string]bool{"auth login": true, "auth status": true, "auth code send": true, "auth code verify": true, "auth logout": true, "doctor": true, "search": true, "product": true, "cart show": true, "cart add": true, "cart update": true, "cart remove": true, "cart clear": true, "delivery windows": true, "checkout payments": true, "checkout run": true, "orders": true, "exit-codes": true, "agent exit-codes": true}
+	disabled := map[string]bool{"cart reorder": true, "list order": true, "fav order": true, "delivery simulate": true, "subs show": true, "subs pause": true, "subs resume": true, "subs skip": true, "subs unskip": true}
 	seen := 0
 	var walk func(*kong.Node, string)
 	walk = func(node *kong.Node, path string) {
@@ -332,7 +338,7 @@ func TestOversizedKeyringEntryReportsConfigError(t *testing.T) {
 }
 
 func TestDisabledCommandsUseDomainExitCode(t *testing.T) {
-	_, err := (&Runner{}).Run("checkout run", globals())
+	_, err := (&Runner{}).Run("subs show", globals())
 	var typed *errfmt.Error
 	if !errors.As(err, &typed) || typed.Code != 9 || !strings.Contains(typed.Message, "nothing was sent") {
 		t.Fatalf("err=%v", err)
