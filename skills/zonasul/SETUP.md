@@ -18,22 +18,26 @@ If the user doesn't have an account:
 
 ## 3. Authenticate
 
-The recommended method stores credentials for automatic token refresh:
+The recommended method stores a session that renews itself:
 
 ```bash
 zonasul auth login --email you@example.com --password yourpass
 ```
 
-This performs the full Zona Sul OAuth flow, stores the email in `~/.config/zonasul/credentials.json` and the password in the system keychain. The JWT (24h TTL) is also stored in the keychain and auto-refreshes when expired.
+This logs in to the current storefront, checks that the session belongs to that email, and stores the session, with the password used to renew it, as one entry in the system keychain.
 
 Alternative methods:
 
 ```bash
 # Via environment variables (CI/headless)
-ZONASUL_EMAIL=you@example.com ZONASUL_PASSWORD=yourpass zonasul auth login
+ZONASUL_EMAIL=you@example.com ZONASUL_PASSWORD=yourpass zonasul auth login --no-input
 
-# Via JWT token (manual, no auto-refresh)
-zonasul auth login --token <VtexIdclientAutCookie_zonasul>
+# Via an emailed one-time code (no automatic renewal)
+zonasul auth code send --email you@example.com
+zonasul auth code verify --code 123456
+
+# Via an existing storefront token (manual, no automatic renewal)
+zonasul auth login --token <token> --email you@example.com
 
 # Interactive (prompts for email/password)
 zonasul auth login
@@ -44,36 +48,28 @@ Verify auth:
 zonasul auth status
 ```
 
-## 4. Set Up Saved Credit Card
+## 4. Set Up Delivery Address and Saved Credit Card
 
-To use credit card checkout, save a card through the browser first:
-1. Open https://www.zonasul.com.br/checkout/#/payment with items in cart
-2. Select "Cartao de credito" and fill in card details
-3. Check "Salvar este cartao de forma segura para proximas compras"
-4. Complete one order through the browser
+A cart opened by the CLI delivers to the account's default address, and checkout charges a credit card saved on the account. A cart that was already open keeps the address it was opened with. Set both up in the browser at https://www.zonasul.com.br:
 
-Then link the browser's orderForm to the CLI:
-1. In DevTools > Application > Cookies, find `checkout.vtex.com`
-2. Copy the `__ofid=` value (the orderFormId)
-3. Save it:
+1. Save one delivery address and make it the default. The CLI refuses to open a cart when the account has no default address or more than one.
+2. Save a credit card on the account.
+
+The CLI never asks for a card number or a CVV. It lists saved cards by ID and masked number:
 
 ```bash
-echo '{"orderFormId":"PASTE_ORDER_FORM_ID_HERE"}' > ~/.config/zonasul/config.json
+zonasul checkout payments --json
 ```
 
-## 5. CVV
-
-For credit card checkout, the CVV is required each time:
+Then check that everything is in place:
 
 ```bash
-zonasul checkout --cvv XXX --confirm
-# or
-ZONASUL_CVV=XXX zonasul checkout --confirm
+zonasul doctor
 ```
 
-Never store CVV in plaintext config files.
+`doctor` exits 0 when the session, the default address and a saved card all pass, and exits 10 naming what is missing otherwise.
 
-## 6. Headless / SSH
+## 5. Headless / SSH
 
 On headless macOS (e.g., SSH), the keychain must be unlocked first:
 
