@@ -199,11 +199,14 @@ func TestPaymentResponseAndCompletionFailureRemainUnverified(t *testing.T) {
 			}))
 			defer srv.Close()
 			result, err := New(srv.URL, srv.Client()).SubmitCard("token", &Order{ID: "order", Status: 1, AddressID: "order-address"}, PaymentMethod{ID: "card", Method: 1}, Window{})
+			if result.OrderID != "order" {
+				t.Fatalf("lost submitted order identity: result=%+v err=%v", result, err)
+			}
 			if completions != tc.wantCompletions {
 				t.Fatalf("completions=%d", completions)
 			}
 			if tc.name == "status-code" || tc.name == "unmapped-status" {
-				if err != nil || result.OrderID != "completed" || (tc.name == "status-code" && (result.GatewayStatusCode == nil || *result.GatewayStatusCode != 2)) {
+				if err != nil || (tc.name == "status-code" && (result.GatewayStatusCode == nil || *result.GatewayStatusCode != 2)) {
 					t.Fatalf("result=%+v err=%v", result, err)
 				}
 			} else {

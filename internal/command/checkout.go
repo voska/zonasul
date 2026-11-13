@@ -400,16 +400,14 @@ func (r *Runner) checkout(g *cli.Globals) error {
 			}
 			return err
 		}
-		completedID := submission.OrderID
-		readback, readErr := r.client().Order(s.Token, completedID)
-		result["orderId"] = completedID
+		readback, readErr := r.client().Order(s.Token, submission.OrderID)
 		if readErr == nil {
 			result["statusCode"] = readback.Status
 		}
 		if err := g.Formatter().Print(result); err != nil {
-			return errfmt.New(bff.ExitSubmittedUnverified, "payment attempted; output failed; do not retry checkout; inspect orders "+completedID)
+			return errfmt.New(bff.ExitSubmittedUnverified, "payment attempted; output failed; do not retry checkout; inspect orders "+submission.OrderID)
 		}
-		return errfmt.New(bff.ExitSubmittedUnverified, "payment submitted, issuer settlement NOT VERIFIED; do not retry checkout; inspect orders "+completedID)
+		return errfmt.New(bff.ExitSubmittedUnverified, "payment submitted, issuer settlement NOT VERIFIED; do not retry checkout; inspect orders "+submission.OrderID)
 	}
 	rows, err := cartRows(o)
 	if err != nil {

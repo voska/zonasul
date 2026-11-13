@@ -431,11 +431,10 @@ func (c *Client) SubmitCard(token string, order *Order, card PaymentMethod, w Wi
 	// The storefront calls completion after a successful BFF envelope. Its
 	// gateway status is preserved as evidence, never interpreted as settlement.
 	var completion struct {
-		OrderID string `json:"newOrderId"`
+		NextCartID string `json:"newOrderId"`
 	}
-	if err := c.Request(http.MethodPost, "/gateway/payments/order-completion", token, map[string]any{"orderId": order.ID, "paymentMethodId": "1", "origin": 2}, &completion); err != nil || completion.OrderID == "" {
+	if err := c.Request(http.MethodPost, "/gateway/payments/order-completion", token, map[string]any{"orderId": order.ID, "paymentMethodId": "1", "origin": 2}, &completion); err != nil || completion.NextCartID == "" {
 		return result, errfmt.New(ExitSubmittedUnverified, "completion unverified; do not retry checkout; inspect order "+order.ID)
 	}
-	result.OrderID = completion.OrderID
 	return result, nil
 }

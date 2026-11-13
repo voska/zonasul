@@ -102,6 +102,11 @@ the payment outcome before taking further action. Keep the attempt records.
 This protection covers invocations sharing that local state directory; BFF
 idempotency across machines has not been verified.
 
+Checkout's `orderId` identifies the submitted order; `cartId` is its alias. The
+status readback and recovery guidance refer to that order. In version 0.9.0,
+`orderId` incorrectly identified the next empty cart: use `cartId` when inspecting
+an order recorded by that version.
+
 **Settlement limitation:** the migrated BFF issuer-approval response has not
 been verified. An acknowledged submission prints `submitted_unverified`,
 `settlementVerified:false`, and exits 11 even if the order status is 300
