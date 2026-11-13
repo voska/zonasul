@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Keep checkout's `orderId`, order readback and recovery guidance tied to the submitted order. Version 0.9.0 reported the next empty cart as `orderId`; use `cartId` for order IDs recorded from 0.9.0.
 - Authenticate through the current storefront, verify the account identity before saving a session, and keep its secrets separate from legacy VTEX credentials.
 - Use storefront email-login codes and password refresh. Reject token imports whose identity does not match the requested email.
 - Clear and verify the cart after acknowledged checkout so the next order does not reuse its lines; cleanup failure exits 9 with instructions not to repeat checkout (legacy VTEX implementation).

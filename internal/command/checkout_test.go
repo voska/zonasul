@@ -124,8 +124,19 @@ func TestMissingCardPreventsConfirmedCheckoutWrites(t *testing.T) {
 }
 
 func TestConfirmedCheckoutNeverClaimsIssuerSettlement(t *testing.T) {
-	for _, payFails := range []bool{false, true} {
-		t.Run(fmt.Sprint(payFails), func(t *testing.T) {
+	const submittedID = "33333333-3333-4333-8333-333333333333"
+	const nextCartID = "44444444-4444-4444-8444-444444444444"
+	cart := strings.Replace(weightedCart, `"id":"order"`, `"id":"`+submittedID+`"`, 1)
+	for _, tc := range []struct {
+		name                                     string
+		payFails, completionFails, readbackFails bool
+	}{
+		{name: "completed"},
+		{name: "payment-failure", payFails: true},
+		{name: "completion-failure", completionFails: true},
+		{name: "readback-failure", readbackFails: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
 			keyring.MockInit()
 			_ = keyring.Set("zonasul-cli", "bff-session", `{"email":"test@example.invalid","token":"synthetic-token"}`)
 			pays, completions := 0, 0
@@ -135,7 +146,7 @@ func TestConfirmedCheckoutNeverClaimsIssuerSettlement(t *testing.T) {
 				case "/users/me":
 					data = `{"id":"synthetic-user","email":"test@example.invalid"}`
 				case "/cart":
-					data = weightedCart
+					data = cart
 				case "/payment-methods":
 					data = `[{"id":"card","paymentMethodId":1,"displayValue":"****0000","data":"private-card-token"}]`
 				case "/submission-windows/policy":
@@ -144,30 +155,40 @@ func TestConfirmedCheckoutNeverClaimsIssuerSettlement(t *testing.T) {
 					if r.Method != "POST" {
 						t.Error("wrong window method")
 					}
-				case "/gateway/orders/order", "/gateway/orders/completed-order":
+				case "/gateway/orders/" + submittedID:
 					var order map[string]any
-					_ = json.Unmarshal([]byte(weightedCart), &order)
+					_ = json.Unmarshal([]byte(cart), &order)
 					order["acceptedOrderDetails"] = map[string]any{"scheduledDate": "2030-01-02", "scheduledStartTime": "13:00:00", "scheduledEndTime": "18:00:00"}
-					if pays > 0 && !payFails {
+					if pays > 0 && !tc.payFails {
+						if tc.readbackFails {
+							w.WriteHeader(http.StatusServiceUnavailable)
+							return
+						}
 						order["status"] = 300
-						order["id"] = "completed-order"
 					}
 					encoded, _ := json.Marshal(order)
 					data = string(encoded)
 				case "/payments/card":
 					pays++
 					var body map[string]any
-					if json.NewDecoder(r.Body).Decode(&body) != nil || body["userPaymentMethodId"] != "card" || body["paymentMethodId"] != float64(1) || body["orderId"] != "order" || body["addressId"] != "address" {
+					if json.NewDecoder(r.Body).Decode(&body) != nil || body["userPaymentMethodId"] != "card" || body["paymentMethodId"] != float64(1) || body["orderId"] != submittedID || body["addressId"] != "address" {
 						t.Error("wrong payment payload")
 					}
-					if payFails {
+					if tc.payFails {
 						w.WriteHeader(503)
 						_, _ = w.Write([]byte("private-server-body"))
 						return
 					}
 				case "/gateway/payments/order-completion":
 					completions++
-					data = `{"newOrderId":"completed-order"}`
+					if tc.completionFails {
+						w.WriteHeader(http.StatusServiceUnavailable)
+						return
+					}
+					data = fmt.Sprintf(`{"newOrderId":%q}`, nextCartID)
+				case "/gateway/orders/" + nextCartID:
+					data = fmt.Sprintf(`{"id":%q,"status":1,"items":[],"subtotal":{"total":17.9}}`, nextCartID)
+					t.Error("read the next empty cart instead of the submitted order")
 				default:
 					t.Errorf("unexpected route %s", r.URL.Path)
 				}
@@ -186,27 +207,42 @@ func TestConfirmedCheckoutNeverClaimsIssuerSettlement(t *testing.T) {
 			if !errors.As(err, &typed) || typed.Code != 11 || pays != 1 {
 				t.Fatalf("pays=%d err=%v", pays, err)
 			}
-			if payFails && completions != 0 || !payFails && completions != 1 {
+			if tc.payFails && completions != 0 || !tc.payFails && completions != 1 {
 				t.Fatalf("completions=%d", completions)
 			}
 			if !strings.Contains(text, `"status":"submitted_unverified"`) || !strings.Contains(text, `"settlementVerified":false`) {
 				t.Fatalf("false success: %s", text)
 			}
-			if !payFails && !strings.Contains(text, `"orderId":"completed-order"`) {
-				t.Fatal("discarded completion order id")
+			var result struct {
+				OrderID, CartID string
+				StatusCode      *int
+			}
+			if json.Unmarshal([]byte(text), &result) != nil || result.OrderID != submittedID || result.CartID != submittedID {
+				t.Fatalf("lost submitted order identity: %s", text)
+			}
+			if strings.Contains(text+err.Error(), nextCartID) {
+				t.Fatalf("next cart leaked as order identity: output=%s err=%v", text, err)
+			}
+			if !strings.Contains(err.Error(), "inspect order "+submittedID) && !strings.Contains(err.Error(), "inspect orders "+submittedID) {
+				t.Fatalf("missing submitted order recovery ID: %v", err)
+			}
+			if !tc.payFails && !tc.completionFails && !tc.readbackFails {
+				if result.StatusCode == nil || *result.StatusCode != 300 {
+					t.Fatalf("status is not from submitted order: %s", text)
+				}
+			} else if result.StatusCode != nil {
+				t.Fatalf("unverified order status: %s", text)
 			}
 			if strings.Contains(text+err.Error(), "private-") {
 				t.Fatal("private data in output")
 			}
-			// A new process must not repeat an ambiguous payment, even while
-			// /cart still reports the same open order.
-			if payFails {
-				_ = output(t, func() {
-					_, err = (&Runner{Client: bff.New(srv.URL, srv.Client()), stateDir: runner.stateDir}).Run("checkout run", g)
-				})
-				if !errors.As(err, &typed) || typed.Code != 11 || pays != 1 || !strings.Contains(err.Error(), "orders order") {
-					t.Fatalf("second confirmation: pays=%d err=%v", pays, err)
-				}
+			// A new process must not repeat a payment while /cart still
+			// reports the same open order, regardless of the first result.
+			_ = output(t, func() {
+				_, err = (&Runner{Client: bff.New(srv.URL, srv.Client()), stateDir: runner.stateDir}).Run("checkout run", g)
+			})
+			if !errors.As(err, &typed) || typed.Code != 11 || pays != 1 || !strings.Contains(err.Error(), "orders "+submittedID) {
+				t.Fatalf("second confirmation: pays=%d err=%v", pays, err)
 			}
 		})
 	}
